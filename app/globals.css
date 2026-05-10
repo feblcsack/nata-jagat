@@ -5,10 +5,10 @@
 @tailwind utilities;
 
 :root {
-  --forest-900: #0f3317;
+  --forest-900: #0d3318;
   --earth-500: #b56d35;
-  --cream: #f7f3ed;
-  --parchment: #ede6d8;
+  --cream: #faf7f2;
+  --parchment: #f0ebe3;
 }
 
 * {
@@ -46,25 +46,38 @@ body::before {
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--parchment);
+  background: var(--cream);
 }
 ::-webkit-scrollbar-thumb {
-  background: #4da65a;
+  background: #5ab076;
   border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2d8a3b;
+}
+
+/* Smooth transitions throughout */
+button,
+a,
+input,
+select,
+textarea {
+  @apply transition-all duration-200;
 }
 
 /* Recharts custom styles */
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  stroke: rgba(15, 51, 23, 0.08);
+  stroke: rgba(13, 51, 24, 0.08);
 }
 
 /* Animation utilities */
 @layer utilities {
   .text-gradient-forest {
-    background: linear-gradient(135deg, #1e6e2c 0%, #4da65a 50%, #7aaf63 100%);
+    background: linear-gradient(135deg, #1f722e 0%, #5ab076 50%, #7fb062 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -72,15 +85,16 @@ body::before {
 
   .bg-organic {
     background-image: 
-      radial-gradient(ellipse at 20% 50%, rgba(77, 166, 90, 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 20%, rgba(181, 109, 53, 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 80%, rgba(0, 172, 240, 0.05) 0%, transparent 50%);
+      radial-gradient(ellipse at 20% 50%, rgba(90, 176, 118, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(181, 109, 53, 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(46, 197, 255, 0.04) 0%, transparent 50%);
   }
 
   .card-nature {
-    background: rgba(247, 243, 237, 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(77, 166, 90, 0.15);
+    background: rgba(250, 247, 242, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(90, 176, 118, 0.12);
+    box-shadow: 0 2px 8px rgba(13, 51, 24, 0.04);
   }
 
   .status-sangat-baik {

@@ -37,38 +37,39 @@ export default function WeatherCard({ weather, isLoading, isFallback }: WeatherC
   return (
     <div className="card-nature rounded-2xl p-6">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-5">
         <div>
-          <p className="text-xs font-medium text-forest-500 uppercase tracking-wider mb-1">
-            Data BMKG — {location.name}
+          <p className="text-xs font-medium text-forest-600 uppercase tracking-wider mb-1">
+            Data BMKG
           </p>
-          <p className="text-xs text-forest-400">{location.province}</p>
+          <p className="text-sm font-semibold text-forest-900">{location.name}</p>
+          <p className="text-xs text-forest-500 mt-0.5">{location.province}</p>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${intensityColor[rainfallIntensity] || "text-forest-600 bg-forest-50"}`}>
+        <div className="flex flex-col items-end gap-2">
+          <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${intensityColor[rainfallIntensity] || "text-forest-600 bg-forest-100"}`}>
             {rainfallIntensity}
           </span>
           {isFallback && (
-            <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-              Data Estimasi
+            <span className="text-xs text-amber-700 bg-amber-100 px-2.5 py-0.5 rounded-full font-medium">
+              Estimasi
             </span>
           )}
         </div>
       </div>
 
       {/* Main temp */}
-      <div className="flex items-center gap-3 mb-6">
-        <span className="text-5xl font-serif font-bold text-forest-900">
+      <div className="flex items-baseline gap-3 mb-6">
+        <span className="text-6xl font-serif font-bold text-forest-900">
           {current.temperature}°
         </span>
         <div>
-          <p className="text-2xl">{current.weatherIcon}</p>
-          <p className="text-sm text-forest-600">{current.weatherDesc}</p>
+          <p className="text-3xl">{current.weatherIcon}</p>
+          <p className="text-xs text-forest-600 mt-1">{current.weatherDesc}</p>
         </div>
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-3 mb-5">
+      <div className="grid grid-cols-2 gap-2.5 mb-5">
         <StatChip icon={<Droplets className="w-4 h-4 text-sky-500" />} label="Kelembapan" value={`${current.humidity}%`} />
         <StatChip icon={<Droplets className="w-4 h-4 text-blue-600" />} label="Curah Hujan" value={`${current.rainfall}mm`} />
         <StatChip icon={<Wind className="w-4 h-4 text-sage-500" />} label="Angin" value={`${current.windSpeed} km/h`} />
@@ -78,19 +79,19 @@ export default function WeatherCard({ weather, isLoading, isFallback }: WeatherC
       {/* 5-day forecast */}
       {forecast.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-forest-500 uppercase tracking-wider mb-2">Prakiraan 5 Hari</p>
+          <p className="text-xs font-medium text-forest-600 uppercase tracking-wider mb-3">Prakiraan 5 Hari</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {forecast.slice(0, 5).map((day, i) => (
               <div
                 key={i}
-                className="flex-shrink-0 flex flex-col items-center gap-1 bg-white/60 rounded-xl px-3 py-2 min-w-[64px]"
+                className="flex-shrink-0 flex flex-col items-center gap-1.5 bg-white/50 rounded-lg px-3 py-2.5 min-w-[68px] border border-forest-100/30"
               >
-                <p className="text-xs text-forest-500 font-medium">{i === 0 ? "Hari ini" : day.dayName.slice(0, 3)}</p>
-                <p className="text-base">{getWeatherEmoji(day.weatherCode)}</p>
-                <p className="text-xs font-semibold text-forest-800">{day.maxTemp}°</p>
-                <p className="text-xs text-forest-400">{day.minTemp}°</p>
+                <p className="text-xs text-forest-600 font-medium">{i === 0 ? "Hari ini" : day.dayName.slice(0, 3)}</p>
+                <p className="text-lg">{getWeatherEmoji(day.weatherCode)}</p>
+                <p className="text-xs font-semibold text-forest-900">{day.maxTemp}°</p>
+                <p className="text-xs text-forest-500">{day.minTemp}°</p>
                 {day.rainfall > 0 && (
-                  <p className="text-xs text-sky-600">{day.rainfall}mm</p>
+                  <p className="text-xs text-sky-600 font-medium">{day.rainfall}mm</p>
                 )}
               </div>
             ))}
@@ -103,11 +104,11 @@ export default function WeatherCard({ weather, isLoading, isFallback }: WeatherC
 
 function StatChip({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-2 bg-white/60 rounded-xl p-3">
+    <div className="flex items-center gap-2 bg-white/50 rounded-lg p-3 border border-forest-100/30">
       {icon}
       <div>
-        <p className="text-xs text-forest-500">{label}</p>
-        <p className="text-sm font-semibold text-forest-800">{value}</p>
+        <p className="text-xs text-forest-500 font-medium">{label}</p>
+        <p className="text-sm font-semibold text-forest-900">{value}</p>
       </div>
     </div>
   );

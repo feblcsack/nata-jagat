@@ -36,10 +36,10 @@ export default function BentangKidangCard({ data }: BentangKidangCardProps) {
   return (
     <div className="card-nature rounded-2xl p-6">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-5">
         <div>
-          <p className="text-xs font-medium text-forest-500 uppercase tracking-wider mb-1">
-            Pengetahuan Tradisional Baduy
+          <p className="text-xs font-medium text-forest-600 uppercase tracking-wider mb-1">
+            Pengetahuan Tradisional
           </p>
           <h3 className="font-serif text-xl font-semibold text-forest-900">
             Bentang Kidang
@@ -48,44 +48,44 @@ export default function BentangKidangCard({ data }: BentangKidangCardProps) {
         <div className="text-2xl">🌌</div>
       </div>
 
-      {/* Phase badge */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <span className={`text-xs font-semibold px-3 py-1 rounded-full ${phaseColor}`}>
+      {/* Phase badges */}
+      <div className="flex flex-wrap gap-2 mb-5">
+        <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg ${phaseColor}`}>
           {data.phase}
         </span>
-        <span className={`text-xs font-medium px-3 py-1 rounded-full ${season.bg} ${season.text}`}>
-          <span className={`inline-block w-1.5 h-1.5 rounded-full ${season.dot} mr-1.5 align-middle`} />
+        <span className={`text-xs font-medium px-3 py-1.5 rounded-lg ${season.bg} ${season.text} flex items-center gap-1.5`}>
+          <span className={`inline-block w-1.5 h-1.5 rounded-full ${season.dot}`} />
           {data.traditionalSeason}
         </span>
       </div>
 
       {/* Meaning */}
-      <div className="bg-forest-950/5 rounded-xl p-4 mb-4">
+      <div className="bg-forest-50/50 rounded-lg p-4 mb-5 border border-forest-100/30">
         <div className="flex gap-2 mb-2">
           <Star className="w-4 h-4 text-earth-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm font-medium text-forest-800">{data.meaning}</p>
+          <p className="text-sm font-semibold text-forest-900">{data.meaning}</p>
         </div>
         <p className="text-xs text-forest-600 leading-relaxed">{data.description}</p>
       </div>
 
       {/* Star position */}
-      <div className="flex gap-2 mb-3">
+      <div className="flex gap-2.5 mb-3">
         <Moon className="w-4 h-4 text-sky-500 flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-xs font-medium text-forest-700">Posisi Bintang</p>
-          <p className="text-xs text-forest-500">{data.starPosition}</p>
+        <div className="flex-1">
+          <p className="text-xs font-semibold text-forest-700">Posisi Bintang</p>
+          <p className="text-xs text-forest-600 mt-0.5">{data.starPosition}</p>
         </div>
       </div>
 
       {/* Lunar cycle */}
-      <div className="text-xs text-forest-500 mb-4 pl-6">{data.lunarCycle}</div>
+      <div className="text-xs text-forest-600 mb-5 pl-6 font-medium">{data.lunarCycle}</div>
 
       {/* Farming guidance */}
-      <div className="border-t border-forest-100 pt-4">
-        <div className="flex items-start gap-2">
+      <div className="border-t border-forest-100/40 pt-4">
+        <div className="flex items-start gap-2.5">
           {riskIcons[data.riskLevel]}
-          <div>
-            <p className="text-xs font-semibold text-forest-700 mb-1">
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-forest-800 mb-1">
               Panduan Baduy — {data.riskLevel}
             </p>
             <p className="text-xs text-forest-600 leading-relaxed">

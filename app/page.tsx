@@ -43,36 +43,36 @@ export default function HomePage() {
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-5">
               <Link
                 href="/prediksi"
-                className="inline-flex items-center gap-2 px-6 py-3.5 bg-forest-600 text-white font-semibold rounded-lg hover:bg-forest-700 transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                className="btn-primary inline-flex items-center gap-3"
               >
                 Lihat Prediksi Tanam
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
                 href="/edukasi"
-                className="inline-flex items-center gap-2 px-6 py-3.5 border-2 border-forest-600 text-forest-700 font-semibold rounded-lg hover:bg-forest-50 transition-all duration-200"
+                className="btn-secondary inline-flex items-center gap-3"
               >
                 Pelajari Bentang Kidang
-                <Star className="w-4 h-4" />
+                <Star className="w-5 h-5" />
               </Link>
             </div>
           </div>
 
           {/* Hero stats */}
-          <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl">
+          <div className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-5 max-w-2xl">
             {[
               { value: "12", label: "Bulan Kalender", icon: "🌙" },
               { value: "6", label: "Fase Bintang", icon: "⭐" },
               { value: "4", label: "Musim Tanam", icon: "🌾" },
               { value: "Real-time", label: "Data BMKG", icon: "📡" },
             ].map((stat) => (
-              <div key={stat.label} className="card-nature rounded-lg p-4 text-center border border-forest-100/40">
-                <div className="text-2xl mb-2">{stat.icon}</div>
-                <div className="font-serif font-bold text-lg text-forest-900">{stat.value}</div>
-                <div className="text-xs text-forest-600 font-medium mt-1">{stat.label}</div>
+              <div key={stat.label} className="card-nature rounded-2xl p-6 text-center border-2 hover:scale-110 transition-all">
+                <div className="text-4xl mb-3 block">{stat.icon}</div>
+                <div className="font-serif font-bold text-3xl text-forest-900 mb-1">{stat.value}</div>
+                <div className="text-xs text-forest-600 font-bold uppercase">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -129,45 +129,45 @@ export default function HomePage() {
             <p className="text-forest-700 text-sm max-w-lg mx-auto">Integrasi sempurna antara pengetahuan tradisional dan data modern</p>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-6 mb-10">
+          <div className="grid sm:grid-cols-3 gap-7 mb-12">
             {[
               {
-                icon: <Star className="w-6 h-6" />,
-                color: "bg-earth-100/60 text-earth-700",
+                icon: <Star className="w-8 h-8" />,
+                color: "bg-gradient-to-br from-earth-200 to-earth-300 text-earth-800",
                 title: "Bentang Kidang",
                 subtitle: "Pengetahuan Bintang",
                 desc: "Sistem pembacaan posisi konstelasi Orion yang telah digunakan masyarakat Baduy selama berabad-abad untuk menentukan musim tanam.",
                 badge: "Tradisional",
-                badgeColor: "bg-earth-100/80 text-earth-800 border border-earth-200/50",
+                badgeColor: "bg-earth-100 text-earth-800 border-2 border-earth-300",
               },
               {
-                icon: <Leaf className="w-6 h-6" />,
-                color: "bg-forest-100/60 text-forest-700",
+                icon: <Leaf className="w-8 h-8" />,
+                color: "bg-gradient-to-br from-forest-200 to-forest-300 text-forest-800",
                 title: "Kalender Baduy",
                 subtitle: "Siklus Pertanian",
                 desc: "Panduan aktivitas pertanian bulanan: waktu semai, tanam, rawat, hingga panen — dengan ritual dan pantangan tradisional.",
                 badge: "Tradisional",
-                badgeColor: "bg-forest-100/80 text-forest-800 border border-forest-200/50",
+                badgeColor: "bg-forest-100 text-forest-800 border-2 border-forest-300",
               },
               {
-                icon: <CloudRain className="w-6 h-6" />,
-                color: "bg-sky-100/60 text-sky-700",
+                icon: <CloudRain className="w-8 h-8" />,
+                color: "bg-gradient-to-br from-sky-200 to-sky-300 text-sky-800",
                 title: "Data BMKG",
                 subtitle: "Cuaca Real-time",
                 desc: "Prakiraan curah hujan, suhu, dan kelembapan dari BMKG Open Data API — diambil real-time dan dinormalisasi untuk akurasi.",
                 badge: "Modern",
-                badgeColor: "bg-sky-100/80 text-sky-800 border border-sky-200/50",
+                badgeColor: "bg-sky-100 text-sky-800 border-2 border-sky-300",
               },
             ].map((item, i) => (
-              <div key={i} className="card-nature rounded-2xl p-6 border border-forest-100/40 hover:border-forest-200/60 transition-all duration-200">
-                <div className={`w-12 h-12 rounded-lg ${item.color} flex items-center justify-center mb-4`}>
+              <div key={i} className="card-nature rounded-3xl p-8 border-2 hover:scale-105 transition-all duration-300">
+                <div className={`w-16 h-16 rounded-xl ${item.color} flex items-center justify-center mb-6 shadow-lg`}>
                   {item.icon}
                 </div>
-                <div className={`inline-block text-xs px-3 py-1 rounded-full mb-3 font-semibold ${item.badgeColor}`}>
+                <div className={`inline-block text-sm px-4 py-2 rounded-lg mb-4 font-bold ${item.badgeColor}`}>
                   {item.badge}
                 </div>
-                <h3 className="font-serif text-lg font-semibold text-forest-900 mb-1">{item.title}</h3>
-                <p className="text-xs text-forest-600 font-medium mb-3">{item.subtitle}</p>
+                <h3 className="font-serif text-2xl font-bold text-forest-900 mb-2">{item.title}</h3>
+                <p className="text-sm text-forest-700 font-bold mb-4">{item.subtitle}</p>
                 <p className="text-sm text-forest-700 leading-relaxed">{item.desc}</p>
               </div>
             ))}

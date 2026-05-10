@@ -91,10 +91,24 @@ textarea {
   }
 
   .card-nature {
-    background: rgba(250, 247, 242, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(90, 176, 118, 0.12);
-    box-shadow: 0 2px 8px rgba(13, 51, 24, 0.04);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 247, 242, 0.95) 100%);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(90, 176, 118, 0.2);
+    box-shadow: 0 8px 32px rgba(13, 51, 24, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+  }
+
+  .card-nature:hover {
+    box-shadow: 0 12px 48px rgba(13, 51, 24, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    transform: translateY(-4px);
+  }
+
+  .btn-primary {
+    @apply relative px-7 py-3.5 bg-gradient-to-br from-forest-600 to-forest-700 text-white font-bold rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 hover:-translate-y-1;
+  }
+
+  .btn-secondary {
+    @apply relative px-7 py-3.5 border-2 border-forest-600 text-forest-700 font-bold rounded-lg hover:bg-forest-50 transition-all duration-300 hover:scale-105 active:scale-95;
   }
 
   .status-sangat-baik {

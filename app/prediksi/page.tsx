@@ -192,46 +192,50 @@ function PrediksiContent() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
 
         {/* ── Controls ──────────────────────────────────── */}
-        <div className="card-nature rounded-2xl p-4 mb-5 flex flex-wrap gap-3 items-center">
-          <div className="flex items-center gap-2 bg-white border border-forest-200 rounded-xl px-3 py-2.5 flex-1 min-w-[140px]">
-            <Calendar className="w-4 h-4 text-forest-500 flex-shrink-0" />
-            <select
-              value={month}
-              onChange={e => setMonth(+e.target.value)}
-              className="text-sm font-medium text-forest-700 bg-transparent border-0 outline-none cursor-pointer w-full"
-            >
-              {MONTHS.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
-            </select>
-          </div>
+       {/* ── Controls (Fixed Mobile Layout) ────────────────────── */}
+<div className="card-nature rounded-2xl p-4 mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-center">
+  
+  {/* Dropdown Bulan & Lokasi */}
+  <div className="flex gap-3 lg:col-span-3">
+    <div className="flex items-center gap-2 bg-white border border-forest-200 rounded-xl px-3 py-2.5 flex-1 w-1/2">
+      <Calendar className="w-4 h-4 text-forest-500 flex-shrink-0" />
+      <select
+        value={month}
+        onChange={e => setMonth(+e.target.value)}
+        className="text-sm font-medium text-forest-700 bg-transparent border-0 outline-none w-full cursor-pointer"
+      >
+        {MONTHS.map(m => <option key={m.v} value={m.v}>{m.l}</option>)}
+      </select>
+    </div>
 
-          <div className="flex items-center gap-2 bg-white border border-forest-200 rounded-xl px-3 py-2.5 flex-1 min-w-[160px]">
-            <LocationSelector selectedId={locationId} onChange={setLocationId} />
-          </div>
+    <div className="flex items-center gap-2 bg-white border border-forest-200 rounded-xl px-3 py-2.5 flex-1 w-1/2">
+      <LocationSelector selectedId={locationId} onChange={setLocationId} />
+    </div>
+  </div>
 
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="flex items-center gap-2 px-5 py-2.5 bg-forest-600 text-white rounded-xl text-sm font-semibold hover:bg-forest-500 active:scale-95 transition-all disabled:opacity-60"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            {loading ? "Memuat..." : "Cek Sekarang"}
-          </button>
+  {/* Tombol Aksi */}
+  <div className="flex gap-2 lg:col-span-3">
+    <button
+      onClick={fetchData}
+      disabled={loading}
+      className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-forest-600 text-white rounded-xl text-sm font-semibold hover:bg-forest-500 transition-all disabled:opacity-60"
+    >
+      <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+      {loading ? "..." : "Cek Data"}
+    </button>
 
-          {data && saveState !== "saved" && (
-            <button
-              onClick={() => setShowSaveModal(true)}
-              disabled={saveState !== "idle"}
-              className="flex items-center gap-2 px-4 py-2.5 border-2 border-forest-300 text-forest-700 rounded-xl text-sm font-semibold hover:bg-forest-50 transition-all ml-auto"
-            >
-              <Save className="w-4 h-4" />Simpan
-            </button>
-          )}
-          {saveState === "saved" && (
-            <span className="flex items-center gap-1.5 text-sm text-forest-600 font-medium ml-auto">
-              <CheckCircle className="w-4 h-4" />Tersimpan
-            </span>
-          )}
-        </div>
+    {data && saveState !== "saved" && (
+      <button
+        onClick={() => setShowSaveModal(true)}
+        disabled={saveState !== "idle"}
+        className="flex items-center justify-center px-4 py-2.5 border-2 border-forest-300 text-forest-700 rounded-xl text-sm font-semibold hover:bg-forest-50 transition-all"
+      >
+        <Save className="w-4 h-4 sm:mr-2" />
+        <span className="hidden sm:inline">Simpan</span>
+      </button>
+    )}
+  </div>
+</div>
 
         {error && (
           <div className="flex gap-2 items-center bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 mb-5 text-sm font-medium">

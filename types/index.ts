@@ -1,23 +1,15 @@
-// ============================================================
-// TRADITIONAL KNOWLEDGE TYPES
-// ============================================================
+// ─── TRADITIONAL KNOWLEDGE ────────────────────────────────
 
 export type BentangKidangPhase =
-  | "Kidang Muncul"
-  | "Kidang Puncak"
-  | "Kidang Turun"
-  | "Bintang Waluku"
-  | "Luhur Langit"
-  | "Gelap Langit";
+  | "Kidang Muncul" | "Kidang Puncak" | "Kidang Turun"
+  | "Bintang Waluku" | "Luhur Langit" | "Gelap Langit";
 
 export type TraditionalSeason =
-  | "Mangsa Tandur" // Planting season
-  | "Mangsa Tumbuh" // Growing season
-  | "Mangsa Panen" // Harvest season
-  | "Mangsa Ngaso"; // Rest season
+  | "Mangsa Tandur" | "Mangsa Tumbuh"
+  | "Mangsa Panen"  | "Mangsa Ngaso";
 
 export interface BentangKidang {
-  month: number; // 1-12
+  month: number;
   monthName: string;
   phase: BentangKidangPhase;
   meaning: string;
@@ -39,26 +31,16 @@ export interface KalenderBaduy {
   recommendation: string;
 }
 
-// ============================================================
-// BMKG WEATHER TYPES
-// ============================================================
+// ─── BMKG WEATHER ─────────────────────────────────────────
 
 export interface BMKGWeatherData {
   location: {
-    name: string;
-    lat: number;
-    lon: number;
-    province: string;
+    name: string; lat: number; lon: number; province: string;
   };
   current: {
-    temperature: number;
-    humidity: number;
-    rainfall: number;
-    windSpeed: number;
-    weatherCode: string;
-    weatherDesc: string;
-    weatherIcon: string;
-    timestamp: string;
+    temperature: number; humidity: number; rainfall: number;
+    windSpeed: number; weatherCode: string; weatherDesc: string;
+    weatherIcon: string; timestamp: string;
   };
   forecast: BMKGForecastDay[];
   rainfallIntensity: "Ringan" | "Sedang" | "Lebat" | "Sangat Lebat" | "Tidak Hujan";
@@ -66,26 +48,16 @@ export interface BMKGWeatherData {
 }
 
 export interface BMKGForecastDay {
-  date: string;
-  dayName: string;
-  maxTemp: number;
-  minTemp: number;
-  rainfall: number;
-  humidity: number;
-  weatherCode: string;
-  weatherDesc: string;
+  date: string; dayName: string;
+  maxTemp: number; minTemp: number;
+  rainfall: number; humidity: number;
+  weatherCode: string; weatherDesc: string;
 }
 
-// ============================================================
-// DECISION ENGINE TYPES
-// ============================================================
+// ─── DECISION ENGINE ──────────────────────────────────────
 
 export type RecommendationStatus =
-  | "SANGAT_BAIK"
-  | "BAIK"
-  | "CUKUP"
-  | "TUNDA"
-  | "DILARANG";
+  | "SANGAT_BAIK" | "BAIK" | "CUKUP" | "TUNDA" | "DILARANG";
 
 export interface PlantingRecommendation {
   status: RecommendationStatus;
@@ -94,23 +66,21 @@ export interface PlantingRecommendation {
   details: string[];
   traditionalBasis: string;
   modernBasis: string;
-  confidence: number; // 0-100
+  confidence: number;
   nextReviewDate: string;
   actions: string[];
 }
 
 export interface SyncAnalysis {
   isSynced: boolean;
-  syncScore: number; // 0-100
+  syncScore: number;
   traditionalSays: string;
   modernSays: string;
   conflictNote?: string;
   recommendation: PlantingRecommendation;
 }
 
-// ============================================================
-// API RESPONSE TYPES
-// ============================================================
+// ─── API ──────────────────────────────────────────────────
 
 export interface WeatherAPIResponse {
   success: boolean;
@@ -120,17 +90,13 @@ export interface WeatherAPIResponse {
   fetchedAt: string;
 }
 
-export interface PredictionRequest {
-  month?: number;
-  locationId?: string;
-  lat?: number;
-  lon?: number;
-}
-
+// PredictionResponse uses SyncAnalysis as base;
+// EnhancedSyncAnalysis from decisionEngine extends it
 export interface PredictionResponse {
   bentangKidang: BentangKidang;
   kalenderBaduy: KalenderBaduy;
   weather: BMKGWeatherData;
-  analysis: SyncAnalysis;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  analysis: any; // EnhancedSyncAnalysis at runtime
   generatedAt: string;
 }

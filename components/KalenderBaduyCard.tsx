@@ -4,10 +4,10 @@ import { KalenderBaduy } from "@/types";
 import { Sprout, XCircle, BookOpen } from "lucide-react";
 
 interface KalenderBaduyCardProps {
-  data: KalenderBaduy;
+  kalender: KalenderBaduy;
 }
 
-export default function KalenderBaduyCard({ data }: KalenderBaduyCardProps) {
+export default function KalenderBaduyCard({ kalender: data }: KalenderBaduyCardProps) {
   return (
     <div className="card-nature rounded-2xl p-6">
       {/* Header */}

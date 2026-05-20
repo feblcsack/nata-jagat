@@ -7,6 +7,8 @@ import { getLocationById } from "@/data/locations";
 import { PredictionResponse } from "@/types";
 
 export const runtime = "nodejs";
+// Tambahan krusial: Paksa Next.js jangan nge-cache route ini pas di-build
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -44,7 +46,8 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json(response, {
     headers: {
-      "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
+      // Ubah cache jadi no-store biar selalu narik data paling fresh saat ganti lokasi
+      "Cache-Control": "no-store, max-age=0",
     },
   });
 }

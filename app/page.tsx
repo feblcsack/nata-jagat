@@ -1,7 +1,12 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ArrowRight, Star, Leaf, CloudRain, Brain, ChevronDown } from "lucide-react";
+import { ArrowRight, Star, Leaf, CloudRain, Brain, ChevronDown, BookOpen, Moon, Sparkles, Sprout, Satellite } from "lucide-react";
+
+// 1. PASTIKAN LU IMPORT KOMPONEN ROTATING TEXT-NYA DI SINI BROW!
+// Sesuaikan path-nya ya kalau file RotatingText-nya ada di folder lain.
+import RotatingText from "@/components/RotatingText"; 
+import PixelBlast from "@/components/PixelBlast";
 
 const MONTHS_ID = [
   "Januari","Februari","Maret","April","Mei","Juni",
@@ -16,74 +21,98 @@ export default function HomePage() {
       <Navbar />
 
       {/* ====== HERO ====== */}
-      <section className="relative pt-28 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        {/* Decorative background circles */}
-        <div className="absolute top-20 right-0 w-72 h-72 bg-forest-100/60 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-56 h-56 bg-earth-100/40 rounded-full translate-y-1/3 -translate-x-1/3 blur-2xl pointer-events-none" />
+     {/* ====== HERO SECTION ====== */}
+<section className="relative pt-32 pb-40 px-4 sm:px-6 lg:px-8 overflow-hidden bg-[#FDFBF7]">
+  
+  {/* PixelBlast Background Layer */}
+  <div className="absolute inset-0 z-0 opacity-[0.15]">
+    <PixelBlast
+      variant="square"
+      pixelSize={6}
+      color="#186534" 
+      patternScale={2}
+      patternDensity={1}
+      pixelSizeJitter={0}
+      enableRipples
+      rippleSpeed={0.3}
+      rippleThickness={0.1}
+      rippleIntensityScale={1.2}
+      speed={0.3}
+      edgeFade={0.5}
+      transparent
+    />
+  </div>
 
-        <div className="max-w-7xl mx-auto">
-          <div className="max-w-3xl">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-forest-100 text-forest-700 text-xs font-medium px-3 py-1.5 rounded-full mb-6 border border-forest-200/60">
-              <span className="w-2 h-2 bg-forest-500 rounded-full animate-pulse" />
-              Integrasi Kearifan Lokal × Data BMKG
-            </div>
+  {/* Content Layer (z-10) */}
+  <div className="max-w-7xl mx-auto relative z-10">
+    <div className="max-w-3xl">
+      {/* Badge */}
+      <div className="inline-flex items-center gap-2 bg-[#186534]/10 text-[#186534] text-[10px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-8 border border-[#186534]/10">
+        <span className="w-1.5 h-1.5 bg-[#186534] rounded-full animate-pulse" />
+        Integrasi Kearifan Lokal × Data BMKG
+      </div>
 
-            {/* Headline */}
-            <h1 className="font-serif text-5xl sm:text-6xl font-bold text-forest-900 leading-tight mb-6">
-              Membaca Alam{" "}
-              <span className="text-gradient-forest">Lewat Bintang</span>{" "}
-              dan Sains
-            </h1>
+      <h1 className="font-serif text-5xl sm:text-6xl font-black text-[#092c16] leading-[1.05] mb-8 flex flex-wrap items-baseline gap-x-3 gap-y-2">
+        <span>Membaca Alam Lewat</span>
+        <RotatingText
+          texts={['Bintang', 'Dan Sains']}
+          mainClassName="bg-[#186534] text-[#FDFBF7] px-5 py-1 md:py-2 rounded-xl overflow-hidden shadow-xl"
+          staggerFrom="last"
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "-120%" }}
+          staggerDuration={0.025}
+          splitLevelClassName="overflow-hidden pb-0.5 sm:pb-1"
+          transition={{ type: "spring", damping: 30, stiffness: 400 }}
+          rotationInterval={2400}
+          splitBy="characters"
+          auto
+          loop
+        />
+      </h1>
 
-            <p className="text-lg text-forest-600 leading-relaxed mb-8 max-w-2xl">
-              Nata Jagat menggabungkan pengetahuan tradisional Baduy tentang{" "}
-              <strong className="text-forest-800">Bentang Kidang</strong> dengan data
-              cuaca real-time <strong className="text-forest-800">BMKG</strong> untuk
-              menghasilkan rekomendasi musim tanam yang akurat dan berwawasan budaya.
-            </p>
+      <p className="text-lg text-slate-600 leading-relaxed mb-10 max-w-2xl font-medium">
+        Nata Jagat menggabungkan pengetahuan tradisional Baduy tentang{" "}
+        <strong className="text-[#723b18] font-bold">Bentang Kidang</strong> dengan data
+        cuaca real-time <strong className="text-[#124d27] font-bold">BMKG</strong> untuk
+        rekomendasi musim tanam yang presisi.
+      </p>
 
-            {/* CTAs */}
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/prediksi"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-forest-600 text-white font-medium rounded-xl hover:bg-forest-500 transition-all shadow-lg shadow-forest-200 hover:shadow-forest-300 hover:-translate-y-0.5"
-              >
-                Lihat Prediksi Tanam
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/edukasi"
-                className="inline-flex items-center gap-2 px-6 py-3 border border-forest-200 text-forest-700 font-medium rounded-xl hover:bg-forest-50 transition-all"
-              >
-                Pelajari Bentang Kidang
-                <Star className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
+      {/* CTAs */}
+      <div className="flex flex-wrap gap-4">
+        <Link
+          href="/prediksi"
+          className="inline-flex items-center gap-2 px-8 py-4 bg-[#186534] text-white text-sm font-bold uppercase tracking-wide hover:bg-[#14532D] transition-all shadow-lg"
+        >
+          Lihat Prediksi Tanam
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+        <Link
+          href="/edukasii"
+          className="inline-flex items-center gap-2 px-8 py-4 border border-[#186534]/20 text-[#186534] text-sm font-bold uppercase tracking-wide hover:bg-[#186534]/5 transition-all"
+        >
+          Pelajari Bentang Kidang
+          <Star className="w-4 h-4" />
+        </Link>
+      </div>
+    </div>
 
-          {/* Hero stats */}
-          <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl">
-            {[
-              { value: "12", label: "Bulan Kalender", icon: "🌙" },
-              { value: "6", label: "Fase Bintang Kidang", icon: "⭐" },
-              { value: "4", label: "Musim Tradisional", icon: "🌾" },
-              { value: "Real-time", label: "Data BMKG", icon: "📡" },
-            ].map((stat) => (
-              <div key={stat.label} className="card-nature rounded-xl p-4">
-                <div className="text-2xl mb-1">{stat.icon}</div>
-                <div className="font-serif font-bold text-xl text-forest-900">{stat.value}</div>
-                <div className="text-xs text-forest-500">{stat.label}</div>
-              </div>
-            ))}
-          </div>
+    {/* Hero Stats */}
+    <div className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-3xl">
+      {[
+        { value: "12", label: "Bulan Kalender" },
+        { value: "6", label: "Fase Bintang" },
+        { value: "4", label: "Musim Tradisi" },
+        { value: "Live", label: "BMKG API" },
+      ].map((stat) => (
+        <div key={stat.label} className="border-l border-[#186534]/20 pl-4 py-1">
+          <div className="font-serif font-black text-2xl text-slate-900 mb-0.5">{stat.value}</div>
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stat.label}</div>
         </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-forest-400 animate-bounce">
-          <ChevronDown className="w-5 h-5" />
-        </div>
-      </section>
+      ))}
+    </div>
+  </div>
+</section>
 
       {/* ====== PROBLEM SECTION ====== */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-forest-950 text-white">
@@ -120,86 +149,80 @@ export default function HomePage() {
       </section>
 
       {/* ====== HOW IT WORKS ====== */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[#FDFBF7]">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-forest-500 text-sm font-medium uppercase tracking-wider mb-3">Cara Kerja</p>
-            <h2 className="font-serif text-3xl font-bold text-forest-900">
-              Tiga Pilar, Satu Rekomendasi
+          <div className="text-center mb-16">
+            <p className="font-sans text-[10px] font-bold text-[#92400E] uppercase tracking-[0.2em] mb-4">Arsitektur Sistem</p>
+            <h2 className="font-serif text-4xl lg:text-5xl font-black text-slate-900">
+              Tiga Pilar, Satu Keputusan.
             </h2>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-6 mb-8">
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
             {[
               {
-                icon: <Star className="w-6 h-6" />,
-                color: "bg-earth-100 text-earth-600",
+                icon: <Sparkles className="w-6 h-6" />,
                 title: "Bentang Kidang",
-                subtitle: "Pengetahuan Bintang Baduy",
-                desc: "Sistem pembacaan posisi konstelasi Orion (Kidang) yang digunakan masyarakat Baduy sejak berabad-abad untuk menentukan musim tanam.",
-                badge: "Tradisional",
-                badgeColor: "bg-earth-100 text-earth-700",
+                subtitle: "Observasi Astronomi Tradisional",
+                desc: "Sistem pembacaan konstelasi Orion (Kidang) yang dijaga turun-temurun oleh masyarakat Baduy untuk membaca kehendak alam.",
+                badge: "Kearifan Lokal",
               },
               {
                 icon: <Leaf className="w-6 h-6" />,
-                color: "bg-forest-100 text-forest-600",
-                title: "Kalender Baduy",
-                subtitle: "Siklus Pertanian Kanekes",
-                desc: "Panduan aktivitas pertanian bulanan berdasarkan tradisi Baduy: waktu semai, tanam, rawat, hingga panen — beserta ritual dan pantangannya.",
-                badge: "Tradisional",
-                badgeColor: "bg-forest-100 text-forest-700",
+                title: "Siklus Baduy",
+                subtitle: "Fase Pertanian Kanekes",
+                desc: "Panduan aktivitas bulanan: waktu semai, tanam, hingga larangan keras (pantang) membuka lahan untuk menjaga keseimbangan ekosistem.",
+                badge: "Hukum Adat",
               },
               {
-                icon: <CloudRain className="w-6 h-6" />,
-                color: "bg-sky-100 text-sky-600",
+                icon: <Satellite className="w-6 h-6" />,
                 title: "Data BMKG",
-                subtitle: "Cuaca Real-time",
-                desc: "Prakiraan curah hujan, suhu, dan kelembapan dari BMKG Open Data API — diambil real-time, di-cache, dan dinormalisasi untuk akurasi optimal.",
-                badge: "Modern",
-                badgeColor: "bg-sky-100 text-sky-700",
+                subtitle: "Telemetri Cuaca Modern",
+                desc: "Prakiraan curah hujan, suhu, dan kelembapan ditarik secara real-time melalui Open Data API resmi dari BMKG.",
+                badge: "Sains Modern",
               },
             ].map((item, i) => (
-              <div key={i} className="card-nature rounded-2xl p-6">
-                <div className={`w-12 h-12 rounded-xl ${item.color} flex items-center justify-center mb-4`}>
-                  {item.icon}
+              <div key={i} className="border border-slate-200 bg-white p-8 hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="text-[#186534]">{item.icon}</div>
+                  <span className="font-sans text-[9px] font-bold text-slate-500 uppercase tracking-widest border border-slate-200 px-2 py-1">{item.badge}</span>
                 </div>
-                <div className={`inline-block text-xs px-2 py-0.5 rounded-full mb-2 font-medium ${item.badgeColor}`}>
-                  {item.badge}
-                </div>
-                <h3 className="font-serif text-lg font-semibold text-forest-900 mb-1">{item.title}</h3>
-                <p className="text-xs text-forest-500 mb-2">{item.subtitle}</p>
-                <p className="text-sm text-forest-600 leading-relaxed">{item.desc}</p>
+                <h3 className="font-serif text-2xl font-bold text-slate-900 mb-1">{item.title}</h3>
+                <p className="font-sans text-[11px] font-bold text-[#92400E] uppercase tracking-wider mb-4">{item.subtitle}</p>
+                <p className="font-sans text-sm text-slate-600 leading-relaxed font-medium">{item.desc}</p>
               </div>
             ))}
           </div>
 
-          {/* Pipeline visual */}
-          <div className="card-nature rounded-2xl p-6 max-w-2xl mx-auto text-center">
-            <div className="flex items-center justify-center gap-2 flex-wrap">
-              <div className="bg-earth-100 text-earth-700 text-sm font-medium px-4 py-2 rounded-full">
-                🌌 Bentang Kidang
+          {/* Clean Pipeline Visual */}
+          <div className="max-w-3xl mx-auto border border-slate-200 bg-white p-8 md:p-12 text-center">
+            <p className="font-sans text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-8">Alur Pemrosesan Decision Engine</p>
+            
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 mb-8">
+              <div className="font-sans text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 px-6 py-3 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-500" /> Bintang
               </div>
-              <span className="text-forest-400 font-bold">+</span>
-              <div className="bg-forest-100 text-forest-700 text-sm font-medium px-4 py-2 rounded-full">
-                🌱 Kalender Baduy
+              <span className="text-slate-300 font-serif italic text-xl">+</span>
+              <div className="font-sans text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 px-6 py-3 flex items-center gap-2">
+                <Leaf className="w-4 h-4 text-emerald-500" /> Adat
               </div>
-              <span className="text-forest-400 font-bold">+</span>
-              <div className="bg-sky-100 text-sky-700 text-sm font-medium px-4 py-2 rounded-full">
-                🛰️ BMKG
+              <span className="text-slate-300 font-serif italic text-xl">+</span>
+              <div className="font-sans text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 px-6 py-3 flex items-center gap-2">
+                <Satellite className="w-4 h-4 text-sky-500" /> BMKG
               </div>
             </div>
-            <div className="flex items-center justify-center my-3">
-              <div className="w-px h-6 bg-forest-200" />
+
+            <div className="flex flex-col items-center justify-center relative">
+              <div className="w-px h-8 bg-slate-200 mb-4" />
+              <div className="bg-[#186534] text-white p-4 z-10">
+                <Brain className="w-6 h-6" />
+              </div>
+              <div className="w-px h-8 bg-slate-200 mt-4" />
             </div>
-            <div className="flex items-center justify-center gap-2">
-              <Brain className="w-5 h-5 text-forest-500" />
-              <span className="text-sm text-forest-600 font-medium">Decision Engine (Rule-based)</span>
-            </div>
-            <div className="flex items-center justify-center my-3">
-              <div className="w-px h-6 bg-forest-200" />
-            </div>
-            <div className="bg-forest-600 text-white text-sm font-semibold px-6 py-2 rounded-full inline-block">
-              🌾 Rekomendasi Tanam
+
+            <div className="inline-flex items-center gap-3 font-serif text-2xl font-black text-slate-900 mt-4">
+              <Sprout className="w-6 h-6 text-[#186534]" />
+              Rekomendasi Penanaman Final
             </div>
           </div>
         </div>
@@ -225,65 +248,84 @@ export default function HomePage() {
       </section>
 
       {/* ====== EDUCATIONAL TEASER ====== */}
-      <section id="tentang" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-10 items-center">
-            <div>
-              <p className="text-forest-500 text-sm font-medium uppercase tracking-wider mb-3">Edukasi</p>
-              <h2 className="font-serif text-3xl font-bold text-forest-900 mb-4">
-                Mengenal Filosofi Bentang Kidang
-              </h2>
-              <p className="text-forest-600 leading-relaxed mb-6 text-sm">
-                Bentang Kidang adalah sistem pengetahuan langit masyarakat Baduy yang telah 
-                diwariskan selama berabad-abad. Melalui pengamatan posisi konstelasi Orion 
-                (yang mereka sebut "Kidang"), sesepuh Baduy mampu menentukan waktu tanam, 
-                panen, dan masa istirahat lahan dengan presisi tinggi.
+      {/* ====== EDUCATIONAL TEASER (EDITORIAL STYLE) ====== */}
+      <section id="tentang" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#FDFBF7] relative border-t border-slate-200 overflow-hidden">
+        
+        {/* Subtle grid lines background to match the reference image's magazine aesthetic */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(to right, #186534 1px, transparent 1px)', backgroundSize: '120px 100%' }} />
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid lg:grid-cols-12 gap-16 lg:gap-12 items-center">
+            
+            {/* Left Side: Typography & Copy */}
+            <div className="lg:col-span-7">
+              <p className="font-sans text-[11px] font-bold text-[#92400E] uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+                <span className="w-8 h-px bg-[#92400E]/40" /> Edukasi Baduy
               </p>
-              <div className="space-y-3 mb-6">
+              
+              <h2 className="font-serif text-5xl lg:text-6xl xl:text-7xl font-black text-[#186534] leading-[1.05] tracking-tight mb-8">
+                Leluhur Membaca Langit.<br />
+                <span className="text-slate-900">Kita Mewarisinya.</span>
+              </h2>
+              
+              <p className="font-sans text-lg text-slate-600 leading-relaxed mb-10 max-w-xl font-medium">
+                Bentang Kidang adalah sistem pengetahuan langit masyarakat Baduy. Melalui pengamatan presisi posisi konstelasi Orion, sesepuh Baduy menentukan waktu tanam, panen, dan masa istirahat lahan dengan akurasi yang melampaui zaman.
+              </p>
+              
+              <div className="space-y-4 mb-10 border-l-2 border-[#186534]/20 pl-5">
                 {[
-                  { icon: "🌌", text: "6 fase bintang yang memetakan siklus pertanian" },
-                  { icon: "🌙", text: "Sistem kalender lunar yang terintegrasi" },
-                  { icon: "🌾", text: "4 mangsa (musim) pertanian tradisional" },
-                  { icon: "📿", text: "Ritual dan filosofi yang menyertai setiap fase" },
+                  { icon: <Sparkles className="w-5 h-5" />, text: "6 fase bintang yang memetakan siklus pertanian." },
+                  { icon: <Moon className="w-5 h-5" />, text: "Sistem kalender lunar yang terintegrasi alam." },
+                  { icon: <Leaf className="w-5 h-5" />, text: "4 mangsa (musim) pertanian tradisional presisi." },
+                  { icon: <BookOpen className="w-5 h-5" />, text: "Filosofi keseimbangan: mengambil secukupnya, merawat sepenuhnya." },
                 ].map((item, i) => (
-                  <div key={i} className="flex gap-3 items-start">
-                    <span className="text-lg">{item.icon}</span>
-                    <p className="text-sm text-forest-600">{item.text}</p>
+                  <div key={i} className="flex gap-4 items-center">
+                    <span className="text-[#186534]">{item.icon}</span>
+                    <p className="font-sans text-sm font-semibold text-slate-700">{item.text}</p>
                   </div>
                 ))}
               </div>
+              
               <Link
-                href="/edukasi"
-                className="inline-flex items-center gap-2 text-forest-600 font-medium text-sm hover:text-forest-800 transition-colors"
+                href="/edukasii"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#186534] text-[#FDFBF7] font-bold rounded-none hover:bg-[#14532D] transition-all text-sm tracking-wide uppercase shadow-lg shadow-[#186534]/20"
               >
-                Pelajari selengkapnya
+                Pelajari Filosofinya
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
-            {/* Visual card */}
-            <div className="card-nature rounded-2xl p-6 space-y-3">
-              <p className="text-xs font-medium text-forest-500 uppercase tracking-wider">6 Fase Bentang Kidang</p>
-              {[
-                { phase: "Kidang Puncak", season: "Mangsa Tandur", months: "Sep–Okt", color: "bg-forest-500" },
-                { phase: "Kidang Muncul", season: "Mangsa Tandur", months: "Jun–Agt", color: "bg-forest-400" },
-                { phase: "Kidang Turun", season: "Mangsa Tumbuh", months: "Nov", color: "bg-sage-500" },
-                { phase: "Bintang Waluku", season: "Mangsa Panen", months: "Jan–Feb", color: "bg-earth-400" },
-                { phase: "Luhur Langit", season: "Mangsa Tumbuh", months: "Mar & Des", color: "bg-sky-500" },
-                { phase: "Gelap Langit", season: "Mangsa Ngaso", months: "Apr–Mei", color: "bg-gray-500" },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full ${item.color} flex-shrink-0`} />
-                  <div className="flex-1">
-                    <span className="text-sm font-medium text-forest-800">{item.phase}</span>
-                    <span className="text-xs text-forest-400 ml-2">— {item.season}</span>
-                  </div>
-                  <span className="text-xs text-forest-400 bg-forest-50 px-2 py-0.5 rounded-full">
-                    {item.months}
-                  </span>
+            {/* Right Side: Clean List Card (Mimicking the reference's feature list) */}
+            <div className="lg:col-span-5">
+              <div className="bg-white p-8 lg:p-10 shadow-2xl shadow-slate-200/50 border border-slate-100">
+                <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
+                  <p className="font-sans text-[10px] font-bold text-slate-400 uppercase tracking-widest">Siklus 6 Fase Bintang</p>
+                  <Star className="w-4 h-4 text-slate-300" />
                 </div>
-              ))}
+                
+                <div className="space-y-5">
+                  {[
+                    { phase: "Kidang Puncak", season: "Mangsa Tandur", months: "Sep–Okt" },
+                    { phase: "Kidang Muncul", season: "Mangsa Tandur", months: "Jun–Agt" },
+                    { phase: "Kidang Turun", season: "Mangsa Tumbuh", months: "Nov" },
+                    { phase: "Bintang Waluku", season: "Mangsa Panen", months: "Jan–Feb" },
+                    { phase: "Luhur Langit", season: "Mangsa Tumbuh", months: "Mar & Des" },
+                    { phase: "Gelap Langit", season: "Mangsa Ngaso", months: "Apr–Mei" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-5 border-b border-slate-50 last:border-0 last:pb-0 group">
+                      <div>
+                        <p className="font-serif font-bold text-slate-900 text-lg group-hover:text-[#186534] transition-colors">{item.phase}</p>
+                        <p className="font-sans text-xs text-slate-500 font-medium tracking-wide mt-0.5">{item.season}</p>
+                      </div>
+                      <span className="font-sans text-[10px] font-bold text-[#92400E] bg-[#92400E]/5 px-3 py-1.5 border border-[#92400E]/10 self-start sm:self-auto">
+                        {item.months}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
+
           </div>
         </div>
       </section>

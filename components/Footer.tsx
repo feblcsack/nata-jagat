@@ -1,4 +1,4 @@
-import { Leaf, Github } from "lucide-react";
+import { Leaf } from "lucide-react";
 import Link from "next/link";
 
 export default function Footer() {
@@ -26,7 +26,7 @@ export default function Footer() {
               {[
                 { href: "/", label: "Beranda" },
                 { href: "/prediksi", label: "Prediksi Tanam" },
-                { href: "/edukasi", label: "Edukasi Baduy" },
+                { href: "/edukasii", label: "Edukasi Baduy" },
               ].map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm text-forest-400 hover:text-forest-200 transition-colors">
@@ -41,17 +41,17 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-forest-200 mb-3 uppercase tracking-wider">Sumber Data</h4>
             <ul className="space-y-2 text-sm text-forest-400">
-              <li>🛰️ BMKG Open Data API</li>
-              <li>🌌 Pengetahuan Tradisional Baduy</li>
-              <li>📚 Kalender Pertanian Kanekes</li>
-              <li>🌙 Sistem Bentang Kidang</li>
+              <li> BMKG Open Data API</li>
+              <li> Pengetahuan Tradisional Baduy</li>
+              <li> Kalender Pertanian Kanekes</li>
+              <li> Sistem Bentang Kidang</li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-forest-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-forest-500">
-            © 2025 Nata Jagat. Dibuat dengan ❤️ untuk melestarikan kearifan lokal Nusantara.
+            © 2026 Nata Jagat.
           </p>
           <p className="text-xs text-forest-500">
             Data cuaca dari{" "}

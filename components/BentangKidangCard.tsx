@@ -4,7 +4,7 @@ import { BentangKidang } from "@/types";
 import { Star, Moon, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 
 interface BentangKidangCardProps {
-  data: BentangKidang;
+  bentang: BentangKidang;
 }
 
 const phaseColors: Record<string, string> = {
@@ -29,7 +29,7 @@ const riskIcons: Record<string, React.ReactNode> = {
   Tunda: <AlertTriangle className="w-4 h-4 text-red-500" />,
 };
 
-export default function BentangKidangCard({ data }: BentangKidangCardProps) {
+export default function BentangKidangCard({ bentang: data }: BentangKidangCardProps) {
   const season = seasonColors[data.traditionalSeason] || seasonColors["Mangsa Ngaso"];
   const phaseColor = phaseColors[data.phase] || "bg-forest-500 text-white";
 

@@ -7,14 +7,51 @@ import {
   RecommendationStatus,
 } from "@/types";
 
-/**
- * DECISION ENGINE — JANTUNG SISTEM NATA JAGAT
- *
- * Menggabungkan pengetahuan tradisional Baduy dengan data modern BMKG
- * untuk menghasilkan rekomendasi musim tanam yang akurat dan kontekstual.
- *
- * Rule-based system (bukan AI) — lebih stabil, transparan, dan dapat dijelaskan.
- */
+// ─── EXTENDED ANALYSIS TYPES ───────────────────────────────
+
+export interface RiskFactor {
+  factor: string;
+  level: "low" | "medium" | "high" | "critical";
+  description: string;
+  weight: number;
+}
+
+export interface ConfidenceInterval {
+  lower: number;
+  upper: number;
+  label: string;
+}
+
+export interface EnhancedSyncAnalysis extends SyncAnalysis {
+  traditionalScore: number;
+  modernScore: number;
+  riskFactors: RiskFactor[];
+  confidence: ConfidenceInterval;
+  weeklyOutlook: WeeklyOutlook[];
+  alerts: PlantingAlert[];
+  optimalWindow: OptimalWindow | null;
+}
+
+export interface WeeklyOutlook {
+  week: number;
+  label: string;
+  score: number;
+  status: RecommendationStatus;
+  note: string;
+}
+
+export interface PlantingAlert {
+  type: "warning" | "danger" | "info" | "success";
+  title: string;
+  message: string;
+}
+
+export interface OptimalWindow {
+  startWeek: number;
+  endWeek: number;
+  description: string;
+  probability: number;
+}
 
 interface RuleContext {
   bentang: BentangKidang;
@@ -22,298 +59,503 @@ interface RuleContext {
   weather: BMKGWeatherData;
 }
 
-// ============================================================
-// SCORING FUNCTIONS
-// ============================================================
+// ─── MULTI-FACTOR TRADITIONAL SCORING ─────────────────────
 
 function scoreTraditional(bentang: BentangKidang): number {
-  const phaseScores: Record<string, number> = {
-    "Kidang Puncak": 95,
-    "Kidang Muncul": 80,
-    "Kidang Turun": 60,
-    "Bintang Waluku": 40,
-    "Luhur Langit": 50,
-    "Gelap Langit": 10,
+  // Phase score — primary signal
+  const phaseScore: Record<string, number> = {
+    "Kidang Puncak":  95,
+    "Kidang Muncul":  78,
+    "Kidang Turun":   58,
+    "Bintang Waluku": 38,
+    "Luhur Langit":   48,
+    "Gelap Langit":   8,
   };
 
-  const seasonScores: Record<string, number> = {
+  // Season score — contextual weight
+  const seasonScore: Record<string, number> = {
     "Mangsa Tandur": 100,
-    "Mangsa Tumbuh": 60,
-    "Mangsa Panen": 30,
-    "Mangsa Ngaso": 10,
+    "Mangsa Tumbuh": 58,
+    "Mangsa Panen":  28,
+    "Mangsa Ngaso":  8,
   };
 
-  const riskAdjustment: Record<string, number> = {
-    Aman: 0,
-    Waspada: -15,
-    Tunda: -50,
+  // Risk modifier
+  const riskMod: Record<string, number> = {
+    Aman:    0,
+    Waspada: -18,
+    Tunda:   -55,
   };
 
-  const phaseScore = phaseScores[bentang.phase] ?? 50;
-  const seasonScore = seasonScores[bentang.traditionalSeason] ?? 50;
-  const adjustment = riskAdjustment[bentang.riskLevel] ?? 0;
+  const p = phaseScore[bentang.phase] ?? 50;
+  const s = seasonScore[bentang.traditionalSeason] ?? 50;
+  const r = riskMod[bentang.riskLevel] ?? 0;
 
-  return Math.max(0, Math.min(100, (phaseScore + seasonScore) / 2 + adjustment));
+  // Weighted: phase 60%, season 40%
+  return Math.max(0, Math.min(100, p * 0.6 + s * 0.4 + r));
 }
+
+// ─── MULTI-FACTOR MODERN SCORING ──────────────────────────
 
 function scoreModern(weather: BMKGWeatherData): number {
-  let score = 70; // Base score
+  const { rainfall, humidity, temperature: temp, windSpeed } = weather.current;
 
-  const rainfall = weather.current.rainfall;
-  const humidity = weather.current.humidity;
-  const temp = weather.current.temperature;
+  // ── Rainfall (0-35 pts) ────────────────────────────────
+  let rainfallScore = 0;
+  if (rainfall === 0)         rainfallScore = 5;   // Kering
+  else if (rainfall < 5)     rainfallScore = 15;   // Sangat ringan
+  else if (rainfall <= 15)   rainfallScore = 35;   // Ideal ringan
+  else if (rainfall <= 25)   rainfallScore = 30;   // Ideal sedang
+  else if (rainfall <= 40)   rainfallScore = 18;   // Mulai berat
+  else if (rainfall <= 60)   rainfallScore = 8;    // Lebat
+  else                        rainfallScore = 2;    // Sangat lebat
 
-  // Rainfall scoring (optimal: 10-25mm)
-  if (rainfall === 0) score -= 20; // Too dry
-  else if (rainfall < 5) score -= 5;
-  else if (rainfall <= 25) score += 20; // Ideal
-  else if (rainfall <= 50) score -= 10; // Getting heavy
-  else score -= 30; // Flooding risk
+  // ── Temperature (0-25 pts) ─────────────────────────────
+  let tempScore = 0;
+  if (temp < 18)              tempScore = 2;   // Terlalu dingin
+  else if (temp < 22)         tempScore = 10;
+  else if (temp <= 28)        tempScore = 25;  // Optimal padi
+  else if (temp <= 33)        tempScore = 18;
+  else if (temp <= 36)        tempScore = 8;
+  else                        tempScore = 2;   // Terlalu panas
 
-  // Humidity scoring (optimal: 70-85%)
-  if (humidity < 60) score -= 15;
-  else if (humidity <= 85) score += 10;
-  else score -= 5; // Too humid = disease risk
+  // ── Humidity (0-25 pts) ────────────────────────────────
+  let humidScore = 0;
+  if (humidity < 50)          humidScore = 5;
+  else if (humidity < 65)     humidScore = 12;
+  else if (humidity <= 80)    humidScore = 25;  // Optimal
+  else if (humidity <= 88)    humidScore = 18;
+  else                        humidScore = 10;  // Terlalu lembap = jamur
 
-  // Temperature scoring (optimal: 25-32°C for rice)
-  if (temp < 20) score -= 20;
-  else if (temp < 24) score -= 5;
-  else if (temp <= 32) score += 10;
-  else score -= 10;
+  // ── Wind (0-10 pts) ────────────────────────────────────
+  let windScore = 0;
+  if (windSpeed < 5)          windScore = 10;
+  else if (windSpeed < 20)    windScore = 8;
+  else if (windSpeed < 35)    windScore = 4;
+  else                        windScore = 1;
 
-  // Rainfall intensity penalty
-  const intensityPenalty: Record<string, number> = {
-    "Tidak Hujan": -15,
-    Ringan: 10,
-    Sedang: 5,
-    Lebat: -15,
-    "Sangat Lebat": -35,
-  };
-  score += intensityPenalty[weather.rainfallIntensity] ?? 0;
+  // ── Forecast consistency (0-5 pts) ────────────────────
+  let forecastBonus = 0;
+  if (weather.forecast.length >= 3) {
+    const avgForecastRain = weather.forecast
+      .slice(0, 3)
+      .reduce((s, f) => s + f.rainfall, 0) / 3;
+    if (avgForecastRain > 5 && avgForecastRain < 30) forecastBonus = 5;
+    else if (avgForecastRain >= 30)                   forecastBonus = -5;
+  }
 
-  return Math.max(0, Math.min(100, score));
+  const total = rainfallScore + tempScore + humidScore + windScore + forecastBonus;
+  return Math.max(0, Math.min(100, total));
 }
 
-// ============================================================
-// RECOMMENDATION RULES
-// ============================================================
+// ─── RISK FACTORS ─────────────────────────────────────────
+
+function analyzeRiskFactors(ctx: RuleContext): RiskFactor[] {
+  const { bentang, weather } = ctx;
+  const risks: RiskFactor[] = [];
+  const { rainfall, humidity, temperature, windSpeed } = weather.current;
+
+  // Flood risk
+  if (rainfall > 50 || weather.rainfallIntensity === "Sangat Lebat") {
+    risks.push({
+      factor: "Risiko Banjir Lahan",
+      level: rainfall > 80 ? "critical" : "high",
+      description: `Curah hujan ${rainfall}mm berpotensi menggenangi lahan dan merusak bibit`,
+      weight: 0.9,
+    });
+  } else if (rainfall > 30) {
+    risks.push({
+      factor: "Curah Hujan Tinggi",
+      level: "medium",
+      description: `${rainfall}mm — perlu pastikan drainase lahan berfungsi baik`,
+      weight: 0.5,
+    });
+  }
+
+  // Drought risk
+  if (rainfall === 0 && humidity < 65) {
+    risks.push({
+      factor: "Risiko Kekeringan",
+      level: humidity < 50 ? "high" : "medium",
+      description: "Tidak ada hujan dan kelembapan rendah — lahan butuh irigasi tambahan",
+      weight: 0.7,
+    });
+  }
+
+  // Disease risk (high humidity)
+  if (humidity > 88) {
+    risks.push({
+      factor: "Risiko Penyakit Tanaman",
+      level: "medium",
+      description: `Kelembapan ${humidity}% terlalu tinggi — rentan blast dan busuk batang`,
+      weight: 0.6,
+    });
+  }
+
+  // Heat stress
+  if (temperature > 34) {
+    risks.push({
+      factor: "Cekaman Panas",
+      level: temperature > 37 ? "high" : "medium",
+      description: `Suhu ${temperature}°C dapat mengganggu pembungaan dan pengisian gabah`,
+      weight: 0.65,
+    });
+  }
+
+  // Cold stress
+  if (temperature < 20) {
+    risks.push({
+      factor: "Cekaman Dingin",
+      level: "medium",
+      description: `Suhu ${temperature}°C di bawah optimal — perkecambahan lambat`,
+      weight: 0.55,
+    });
+  }
+
+  // Wind
+  if (windSpeed > 35) {
+    risks.push({
+      factor: "Angin Kencang",
+      level: "medium",
+      description: `${windSpeed} km/h dapat merobohkan tanaman padi yang sudah tinggi`,
+      weight: 0.45,
+    });
+  }
+
+  // Traditional pantang
+  if (bentang.phase === "Gelap Langit") {
+    risks.push({
+      factor: "Masa Pantang Baduy",
+      level: "critical",
+      description: "Gelap Langit — pantang keras membuka lahan baru menurut kalender Baduy",
+      weight: 1.0,
+    });
+  } else if (bentang.riskLevel === "Waspada") {
+    risks.push({
+      factor: "Peringatan Kalender Tradisional",
+      level: "medium",
+      description: `${bentang.phase} — ${bentang.farmingGuidance}`,
+      weight: 0.6,
+    });
+  }
+
+  return risks.sort((a, b) => b.weight - a.weight);
+}
+
+// ─── CONFIDENCE INTERVAL ──────────────────────────────────
+
+function calcConfidence(
+  traditionalScore: number,
+  modernScore: number,
+  riskFactors: RiskFactor[]
+): ConfidenceInterval {
+  const gap = Math.abs(traditionalScore - modernScore);
+  const criticalRisks = riskFactors.filter((r) => r.level === "critical").length;
+  const highRisks = riskFactors.filter((r) => r.level === "high").length;
+
+  // Base uncertainty from gap between systems
+  let uncertainty = gap * 0.3;
+  uncertainty += criticalRisks * 12;
+  uncertainty += highRisks * 6;
+  uncertainty = Math.min(uncertainty, 30);
+
+  const combined = Math.round(traditionalScore * 0.45 + modernScore * 0.55);
+  const lower = Math.max(0, Math.round(combined - uncertainty));
+  const upper = Math.min(100, Math.round(combined + uncertainty * 0.5));
+
+  let label: string;
+  if (uncertainty < 8)        label = "Sangat Yakin";
+  else if (uncertainty < 15)  label = "Cukup Yakin";
+  else if (uncertainty < 22)  label = "Perlu Dikonfirmasi";
+  else                         label = "Ketidakpastian Tinggi";
+
+  return { lower, upper, label };
+}
+
+// ─── WEEKLY OUTLOOK ────────────────────────────────────────
+
+function buildWeeklyOutlook(
+  ctx: RuleContext,
+  baseScore: number
+): WeeklyOutlook[] {
+  const { weather } = ctx;
+
+  return Array.from({ length: 4 }, (_, i) => {
+    const week = i + 1;
+    // Simulate forecast degradation / recovery
+    const forecastRain = weather.forecast[Math.min(i * 2, weather.forecast.length - 1)]?.rainfall ?? 10;
+    let weekScore = baseScore;
+
+    if (forecastRain > 40) weekScore -= 15;
+    else if (forecastRain > 25) weekScore -= 8;
+    else if (forecastRain >= 8 && forecastRain <= 20) weekScore += 5;
+    else if (forecastRain < 3) weekScore -= 10;
+
+    weekScore = Math.max(0, Math.min(100, Math.round(weekScore + (Math.random() - 0.5) * 6)));
+
+    const status: RecommendationStatus =
+      weekScore >= 80 ? "SANGAT_BAIK" :
+      weekScore >= 65 ? "BAIK" :
+      weekScore >= 45 ? "CUKUP" :
+      weekScore >= 25 ? "TUNDA" : "DILARANG";
+
+    const notes = [
+      "Fokus tanam",
+      "Lanjutkan perawatan",
+      "Pantau kondisi lapangan",
+      "Siapkan tindakan antisipasi",
+    ];
+
+    return {
+      week,
+      label: `Minggu ${week}`,
+      score: weekScore,
+      status,
+      note: forecastRain > 30
+        ? `Prakiraan hujan ${Math.round(forecastRain)}mm — waspadai genangan`
+        : notes[i],
+    };
+  });
+}
+
+// ─── ALERTS ───────────────────────────────────────────────
+
+function generateAlerts(
+  ctx: RuleContext,
+  riskFactors: RiskFactor[],
+  syncScore: number
+): PlantingAlert[] {
+  const { bentang, weather } = ctx;
+  const alerts: PlantingAlert[] = [];
+
+  // Critical risk alerts
+  const critical = riskFactors.filter((r) => r.level === "critical");
+  critical.forEach((r) => {
+    alerts.push({ type: "danger", title: r.factor, message: r.description });
+  });
+
+  // Optimal window alert
+  if (bentang.phase === "Kidang Puncak" && syncScore >= 75) {
+    alerts.push({
+      type: "success",
+      title: "Window Tanam Optimal Aktif",
+      message: "Bintang Kidang di puncak + cuaca mendukung. Ini waktu terbaik — manfaatkan 2 minggu ke depan.",
+    });
+  }
+
+  // Forecast flood warning
+  const maxForecastRain = Math.max(...weather.forecast.slice(0, 5).map((f) => f.rainfall));
+  if (maxForecastRain > 60) {
+    alerts.push({
+      type: "warning",
+      title: "Prakiraan Hujan Lebat 5 Hari",
+      message: `BMKG memperkirakan hujan hingga ${maxForecastRain}mm dalam 5 hari ke depan. Pastikan drainase lahan siap.`,
+    });
+  }
+
+  // Low sync warning
+  if (Math.abs(ctx.bentang.riskLevel === "Aman" ? 80 : 40) - syncScore > 25) {
+    alerts.push({
+      type: "info",
+      title: "Tradisi & Data Modern Berbeda",
+      message: "Kalender Baduy dan data BMKG menunjukkan sinyal berbeda. Konsultasikan dengan sesepuh setempat.",
+    });
+  }
+
+  return alerts;
+}
+
+// ─── OPTIMAL WINDOW ────────────────────────────────────────
+
+function findOptimalWindow(
+  weeklyOutlook: WeeklyOutlook[]
+): OptimalWindow | null {
+  const goodWeeks = weeklyOutlook.filter(
+    (w) => w.status === "SANGAT_BAIK" || w.status === "BAIK"
+  );
+  if (goodWeeks.length === 0) return null;
+
+  const startWeek = goodWeeks[0].week;
+  const endWeek = goodWeeks[goodWeeks.length - 1].week;
+  const avgScore = goodWeeks.reduce((s, w) => s + w.score, 0) / goodWeeks.length;
+
+  return {
+    startWeek,
+    endWeek,
+    description:
+      goodWeeks.length === 1
+        ? `Minggu ${startWeek} adalah window terbaik`
+        : `Minggu ${startWeek}–${endWeek} adalah periode optimal tanam`,
+    probability: Math.round(avgScore),
+  };
+}
+
+// ─── RULE APPLICATION ─────────────────────────────────────
 
 function applyRules(ctx: RuleContext): PlantingRecommendation {
   const { bentang, kalender, weather } = ctx;
-  const traditionalScore = scoreTraditional(bentang);
-  const modernScore = scoreModern(weather);
-  const combinedScore = Math.round(traditionalScore * 0.45 + modernScore * 0.55);
+  const tScore = scoreTraditional(bentang);
+  const mScore = scoreModern(weather);
+  const combined = Math.round(tScore * 0.45 + mScore * 0.55);
 
-  // RULE 1: Pantang Gelap Langit — OVERRIDE semua kondisi modern
+  // RULE 1: Pantang absolut
   if (bentang.phase === "Gelap Langit" || bentang.riskLevel === "Tunda") {
-    return buildRecommendation({
+    return build({
       status: "DILARANG",
-      title: "Masa Pantang — Tunda Semua Aktivitas Tanam",
-      message:
-        "Tradisi Baduy melarang keras pembukaan lahan baru di masa Gelap Langit. Bintang penanda tanam belum muncul — tanah masih perlu beristirahat.",
+      title: "Masa Pantang — Hentikan Aktivitas Buka Lahan",
+      message: "Gelap Langit adalah masa sakral dalam kalender Baduy. Bintang tanam belum muncul — tanah harus diistirahatkan.",
       details: [
-        "Fase Gelap Langit adalah masa pantang dalam kalender Baduy",
-        "Membuka lahan baru di masa ini diyakini membawa gagal panen",
-        "Fokus pada perawatan lahan dan persiapan benih",
-        `Curah hujan saat ini: ${weather.current.rainfall}mm — kondisi cuaca: ${weather.current.weatherDesc}`,
+        "Fase Gelap Langit: pantang keras membuka lahan baru",
+        "Membuka lahan di masa ini diyakini membawa kegagalan panen",
+        `Kondisi cuaca BMKG: ${weather.current.weatherDesc} (${weather.current.rainfall}mm)`,
+        "Manfaatkan waktu untuk membuat kompos dan memperbaiki irigasi",
       ],
       traditionalBasis: bentang.farmingGuidance,
-      modernBasis: `Data BMKG menunjukkan curah hujan ${weather.rainfallIntensity.toLowerCase()} (${weather.current.rainfall}mm)`,
-      confidence: 90,
-      actions: kalender.prohibited,
-      kalender,
-      combinedScore,
-    });
-  }
-
-  // RULE 2: Puncak Musim Tanam + Cuaca Mendukung
-  if (
-    bentang.phase === "Kidang Puncak" &&
-    bentang.traditionalSeason === "Mangsa Tandur" &&
-    weather.current.rainfall >= 5 &&
-    weather.current.rainfall <= 30
-  ) {
-    return buildRecommendation({
-      status: "SANGAT_BAIK",
-      title: "Waktu Tanam Terbaik — Segera Tanam!",
-      message:
-        "Bintang Kidang berada di puncak langit dan cuaca mendukung. Ini adalah momen paling ideal untuk menanam padi sesuai kalender tradisional Baduy.",
-      details: [
-        `Bintang Kidang di posisi puncak (${bentang.phase}) — tanda tanam paling kuat`,
-        `Curah hujan ideal: ${weather.current.rainfall}mm — optimal untuk pembenihan`,
-        `Suhu ${weather.current.temperature}°C dan kelembapan ${weather.current.humidity}% — kondisi ideal padi`,
-        `Kalender Baduy: ${kalender.primaryActivity}`,
-      ],
-      traditionalBasis: bentang.farmingGuidance,
-      modernBasis: `Prakiraan BMKG: ${weather.current.weatherDesc}, curah hujan ${weather.rainfallIntensity.toLowerCase()}`,
+      modernBasis: `BMKG: ${weather.current.weatherDesc}, curah hujan ${weather.rainfallIntensity}`,
       confidence: 92,
-      actions: kalender.activities,
-      kalender,
-      combinedScore,
+      actions: kalender.prohibited.slice(0, 3),
+      combined,
     });
   }
 
-  // RULE 3: Musim Tanam + Curah Hujan Sangat Lebat
-  if (
-    bentang.traditionalSeason === "Mangsa Tandur" &&
-    weather.rainfallIntensity === "Sangat Lebat"
-  ) {
-    return buildRecommendation({
-      status: "TUNDA",
-      title: "Tunda Tanam — Curah Hujan Terlalu Tinggi",
-      message:
-        "Meski kalender tradisional menunjukkan waktu tanam, curah hujan sangat lebat berpotensi menyebabkan genangan dan merusak bibit. Tunggu 3-5 hari.",
+  // RULE 2: Window emas — Kidang Puncak + cuaca ideal
+  if (bentang.phase === "Kidang Puncak" && weather.current.rainfall >= 5 && weather.current.rainfall <= 25
+      && weather.current.temperature >= 24 && weather.current.temperature <= 32) {
+    return build({
+      status: "SANGAT_BAIK",
+      title: "Window Emas — Waktu Tanam Terbaik!",
+      message: "Kidang di zenith + cuaca optimal = momen langka. Segera tanam dalam 7–10 hari ke depan untuk hasil maksimal.",
       details: [
-        `Bintang Kidang: ${bentang.phase} — waktu tanam secara tradisional`,
-        `PERINGATAN: Curah hujan ${weather.current.rainfall}mm — Sangat Lebat, risiko banjir lahan`,
-        "Bibit yang baru ditanam rentan terhadap genangan",
-        "Tunggu hujan mereda, lalu tanam segera",
+        `Kidang Puncak di zenith tengah malam — sinyal tanam paling kuat`,
+        `Curah hujan ${weather.current.rainfall}mm — ideal untuk perkecambahan`,
+        `Suhu ${weather.current.temperature}°C & kelembapan ${weather.current.humidity}% — optimal untuk padi`,
+        "Aktifkan seluruh tenaga keluarga dan gotong royong",
       ],
       traditionalBasis: bentang.farmingGuidance,
-      modernBasis: `BMKG: ${weather.rainfallIntensity} — ${weather.current.rainfall}mm. Risiko kerusakan bibit tinggi.`,
-      confidence: 78,
-      actions: [
-        "Tunda penanaman 3-5 hari",
-        "Perkuat saluran drainase lahan",
-        "Siapkan bibit cadangan",
-        "Monitor prakiraan BMKG harian",
-      ],
-      kalender,
-      combinedScore,
+      modernBasis: `BMKG: ${weather.current.weatherDesc}, ${weather.rainfallIntensity}, prakiraan stabil`,
+      confidence: 93,
+      actions: kalender.activities.slice(0, 4),
+      combined,
     });
   }
 
-  // RULE 4: Masa Panen + Curah Hujan Lebat
-  if (
-    bentang.traditionalSeason === "Mangsa Panen" &&
-    (weather.rainfallIntensity === "Lebat" || weather.rainfallIntensity === "Sangat Lebat")
-  ) {
-    return buildRecommendation({
+  // RULE 3: Tandur + hujan sangat lebat
+  if (bentang.traditionalSeason === "Mangsa Tandur" && weather.rainfallIntensity === "Sangat Lebat") {
+    return build({
       status: "TUNDA",
-      title: "Percepat Panen — Hujan Lebat Mengancam",
-      message:
-        "Masa panen tiba bersamaan dengan curah hujan tinggi. Segera panen sebelum hujan merusak gabah.",
+      title: "Tunda 3–5 Hari — Hujan Sangat Lebat",
+      message: "Kalender Baduy sudah mengijinkan tanam, tapi BMKG mendeteksi hujan sangat lebat. Bibit baru rentan tergenang.",
       details: [
-        `Bintang Waluku menandakan waktu panen telah tiba`,
-        `Curah hujan ${weather.current.rainfall}mm — berisiko merusak padi yang sudah menguning`,
-        "Padi yang terlalu lama di sawah saat hujan lebat bisa rusak",
-        "Kerahkan seluruh anggota keluarga untuk panen segera",
+        `${bentang.phase} — kalender tradisional: boleh tanam`,
+        `PERINGATAN BMKG: ${weather.current.rainfall}mm — Sangat Lebat, risiko genangan`,
+        "Bibit usia muda (<7 hari) sangat rentan terhadap banjir",
+        "Tunda 3–5 hari, pantau prakiraan harian",
       ],
-      traditionalBasis: "Waluku di langit = segera panen sebelum bintang turun",
-      modernBasis: `BMKG mendeteksi ${weather.rainfallIntensity} — ancaman nyata untuk gabah`,
-      confidence: 85,
-      actions: [
-        "Panen segera dalam 1-2 hari",
-        "Siapkan tempat penjemuran yang terlindung",
-        "Minta bantuan tetangga untuk gotong royong panen",
-        "Simpan gabah di tempat yang tidak bocor",
-      ],
-      kalender,
-      combinedScore,
+      traditionalBasis: bentang.farmingGuidance,
+      modernBasis: `${weather.rainfallIntensity} (${weather.current.rainfall}mm) — risiko tinggi`,
+      confidence: 80,
+      actions: ["Tunda penanaman 3–5 hari", "Perkuat saluran drainase", "Siapkan bibit cadangan", "Monitor prakiraan BMKG"],
+      combined,
     });
   }
 
-  // RULE 5: Masa Persiapan + Kemarau Panjang
-  if (
-    (bentang.phase === "Kidang Muncul" || bentang.phase === "Luhur Langit") &&
-    weather.rainfallIntensity === "Tidak Hujan" &&
-    weather.current.humidity < 65
-  ) {
-    return buildRecommendation({
+  // RULE 4: Masa panen + hujan lebat
+  if (bentang.traditionalSeason === "Mangsa Panen"
+      && (weather.rainfallIntensity === "Lebat" || weather.rainfallIntensity === "Sangat Lebat")) {
+    return build({
+      status: "TUNDA",
+      title: "Percepat Panen — Hujan Lebat Mengancam Gabah",
+      message: "Waktu panen tiba bersamaan hujan lebat. Padi yang menguning rentan rontok dan busuk jika dibiarkan.",
+      details: [
+        "Bintang Waluku — sinyal panen telah tiba",
+        `Hujan ${weather.current.rainfall}mm (${weather.rainfallIntensity}) mengancam kualitas gabah`,
+        "Segera panen dalam 1–2 hari sebelum kondisi memburuk",
+        "Siapkan terpal dan area penjemuran yang terlindung",
+      ],
+      traditionalBasis: "Waluku di langit = segera panen, jangan tunda",
+      modernBasis: `BMKG: ${weather.rainfallIntensity} — ancaman nyata untuk gabah di lapangan`,
+      confidence: 87,
+      actions: ["Panen segera 1–2 hari", "Siapkan penjemuran terlindung", "Minta bantuan gotong royong", "Simpan gabah di tempat kering"],
+      combined,
+    });
+  }
+
+  // RULE 5: Kemarau + persiapan
+  if ((bentang.phase === "Kidang Muncul" || bentang.phase === "Luhur Langit")
+      && weather.rainfallIntensity === "Tidak Hujan" && weather.current.humidity < 65) {
+    return build({
       status: "CUKUP",
-      title: "Persiapan Baik — Nantikan Hujan untuk Tanam",
-      message:
-        "Bintang Kidang mulai muncul — tanda persiapan tanam dimulai. Namun kemarau masih berlangsung. Manfaatkan untuk persiapan lahan dan benih.",
+      title: "Persiapan Lahan — Nantikan Musim Hujan",
+      message: "Kidang mulai muncul — tanda persiapan dimulai. Kemarau masih berlangsung, optimal untuk olah tanah.",
       details: [
-        `${bentang.phase} — kalender tradisional: mulai persiapan lahan`,
-        `Belum ada hujan (kelembapan ${weather.current.humidity}%) — lahan masih kering`,
-        "Manfaatkan musim kering untuk olah tanah dan perbaikan irigasi",
-        "Siapkan sistem tadah hujan untuk mendeteksi awal musim hujan",
+        `${bentang.phase} — fase persiapan menurut kalender Baduy`,
+        `Kelembapan ${weather.current.humidity}% — kemarau aktif, lahan kering`,
+        "Kondisi ideal untuk membajak dan mengolah tanah",
+        "Siapkan bibit dan sistem irigasi sebelum hujan tiba",
       ],
       traditionalBasis: bentang.farmingGuidance,
-      modernBasis: `Musim kemarau aktif. Perkiraan hujan berdasarkan data klimatologi akan turun dalam beberapa minggu.`,
-      confidence: 65,
-      actions: [
-        "Olah tanah dan buat bedengan",
-        "Perbaiki saluran irigasi",
-        "Siapkan benih — seleksi benih berkualitas",
-        "Buat kompos dari sisa tanaman",
-        "Monitor prakiraan BMKG untuk tanda hujan",
-      ],
-      kalender,
-      combinedScore,
+      modernBasis: "Kemarau aktif — optimal untuk persiapan lahan tanpa gangguan hujan",
+      confidence: 68,
+      actions: ["Bajak dan olah tanah", "Perbaiki saluran irigasi", "Seleksi benih berkualitas", "Buat kompos", "Monitor prakiraan awal hujan"],
+      combined,
     });
   }
 
-  // RULE 6: General — berbasis skor gabungan
-  if (combinedScore >= 75) {
-    return buildRecommendation({
+  // RULE 6: Skor tinggi
+  if (combined >= 72) {
+    return build({
       status: "BAIK",
-      title: "Kondisi Baik untuk Bertani",
-      message: `Kombinasi antara ${bentang.phase} dan kondisi cuaca BMKG menunjukkan kondisi yang baik. Ikuti panduan kalender Baduy.`,
+      title: "Kondisi Baik — Lanjutkan Rencana Tanam",
+      message: `${bentang.phase} dan kondisi cuaca mendukung. Ikuti panduan kalender Baduy dengan tetap memantau BMKG.`,
       details: [
-        `Fase tradisional: ${bentang.phase} (${bentang.traditionalSeason})`,
-        `Kondisi cuaca: ${weather.current.weatherDesc}`,
-        `Skor sinkronisasi: ${combinedScore}/100`,
+        `Fase: ${bentang.phase} (${bentang.traditionalSeason})`,
+        `Cuaca: ${weather.current.weatherDesc}, ${weather.rainfallIntensity}`,
+        `Skor sinkronisasi: ${combined}/100`,
         bentang.farmingGuidance,
       ],
       traditionalBasis: bentang.farmingGuidance,
       modernBasis: `BMKG: ${weather.current.weatherDesc}, suhu ${weather.current.temperature}°C`,
-      confidence: 70,
+      confidence: 72,
       actions: kalender.activities.slice(0, 4),
-      kalender,
-      combinedScore,
+      combined,
     });
   }
 
-  if (combinedScore >= 50) {
-    return buildRecommendation({
+  if (combined >= 48) {
+    return build({
       status: "CUKUP",
-      title: "Kondisi Cukup — Lanjutkan dengan Hati-hati",
-      message:
-        "Ada beberapa ketidakcocokan antara kalender tradisional dan kondisi modern. Lanjutkan aktivitas pertanian dengan waspada.",
+      title: "Kondisi Cukup — Pantau Lebih Ketat",
+      message: "Ada ketidaksesuaian antara kalender tradisional dan kondisi cuaca. Lanjutkan dengan kehati-hatian.",
       details: [
         `Fase tradisional: ${bentang.phase}`,
-        `Perhatian cuaca: ${weather.current.weatherDesc}`,
+        `Peringatan cuaca: ${weather.current.weatherDesc}`,
         `Curah hujan: ${weather.current.rainfall}mm (${weather.rainfallIntensity})`,
-        "Pantau kondisi lapangan secara langsung",
+        "Pantau kondisi lapangan secara langsung tiap hari",
       ],
       traditionalBasis: bentang.farmingGuidance,
-      modernBasis: `Data BMKG menunjukkan kondisi ${weather.rainfallIntensity.toLowerCase()}`,
-      confidence: 55,
-      actions: [
-        ...kalender.activities.slice(0, 2),
-        "Monitor cuaca setiap hari",
-        "Siapkan rencana cadangan",
-      ],
-      kalender,
-      combinedScore,
+      modernBasis: `Kondisi ${weather.rainfallIntensity.toLowerCase()} — perlu pemantauan`,
+      confidence: 58,
+      actions: [...kalender.activities.slice(0, 2), "Monitor cuaca setiap hari", "Siapkan rencana cadangan"],
+      combined,
     });
   }
 
-  // Default: Tunda
-  return buildRecommendation({
+  return build({
     status: "TUNDA",
-    title: "Tunda Aktivitas Tanam",
-    message:
-      "Kondisi tradisional dan modern tidak mendukung aktivitas tanam saat ini. Tunggu kondisi yang lebih baik.",
+    title: "Kondisi Kurang Mendukung — Tunda",
+    message: "Sinkronisasi antara kalender Baduy dan data BMKG rendah. Tunggu kondisi lebih kondusif.",
     details: [
-      `Fase tradisional: ${bentang.phase} — ${bentang.riskLevel}`,
-      `Kondisi cuaca: ${weather.rainfallIntensity}`,
-      "Skor sinkronisasi terlalu rendah untuk tanam",
+      `Fase: ${bentang.phase} — ${bentang.riskLevel}`,
+      `Cuaca: ${weather.rainfallIntensity}`,
+      `Skor rendah: ${combined}/100`,
     ],
     traditionalBasis: bentang.farmingGuidance,
     modernBasis: `BMKG: ${weather.current.weatherDesc}`,
-    confidence: 60,
-    actions: ["Tunggu kondisi membaik", "Lakukan pemeliharaan lahan ringan"],
-    kalender,
-    combinedScore,
+    confidence: 62,
+    actions: ["Tunggu kondisi membaik", "Lakukan pemeliharaan ringan"],
+    combined,
   });
 }
-
-// ============================================================
-// BUILDER HELPER
-// ============================================================
 
 interface BuildParams {
   status: RecommendationStatus;
@@ -324,68 +566,66 @@ interface BuildParams {
   modernBasis: string;
   confidence: number;
   actions: string[];
-  kalender: KalenderBaduy;
-  combinedScore: number;
+  combined: number;
 }
 
-function buildRecommendation(params: BuildParams): PlantingRecommendation {
-  const nextReview = new Date();
-  nextReview.setDate(nextReview.getDate() + 7);
-
+function build(p: BuildParams): PlantingRecommendation {
+  const next = new Date();
+  next.setDate(next.getDate() + 7);
   return {
-    status: params.status,
-    title: params.title,
-    message: params.message,
-    details: params.details,
-    traditionalBasis: params.traditionalBasis,
-    modernBasis: params.modernBasis,
-    confidence: params.confidence,
-    nextReviewDate: nextReview.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }),
-    actions: params.actions,
+    status: p.status,
+    title: p.title,
+    message: p.message,
+    details: p.details,
+    traditionalBasis: p.traditionalBasis,
+    modernBasis: p.modernBasis,
+    confidence: p.confidence,
+    nextReviewDate: next.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+    actions: p.actions,
   };
 }
 
-// ============================================================
-// MAIN EXPORT
-// ============================================================
+// ─── MAIN EXPORT ───────────────────────────────────────────
 
 export function runDecisionEngine(
   bentang: BentangKidang,
   kalender: KalenderBaduy,
   weather: BMKGWeatherData
-): SyncAnalysis {
+): EnhancedSyncAnalysis {
   const ctx: RuleContext = { bentang, kalender, weather };
 
-  const traditionalScore = scoreTraditional(bentang);
-  const modernScore = scoreModern(weather);
+  const traditionalScore = Math.round(scoreTraditional(bentang));
+  const modernScore = Math.round(scoreModern(weather));
   const syncScore = Math.round(traditionalScore * 0.45 + modernScore * 0.55);
 
+  const riskFactors = analyzeRiskFactors(ctx);
+  const confidence = calcConfidence(traditionalScore, modernScore, riskFactors);
   const recommendation = applyRules(ctx);
+  const weeklyOutlook = buildWeeklyOutlook(ctx, syncScore);
+  const alerts = generateAlerts(ctx, riskFactors, syncScore);
+  const optimalWindow = findOptimalWindow(weeklyOutlook);
 
-  // Determine if traditional and modern are aligned
-  const isSynced = Math.abs(traditionalScore - modernScore) < 30;
-
+  const isSynced = Math.abs(traditionalScore - modernScore) < 28;
   let conflictNote: string | undefined;
   if (!isSynced) {
-    if (traditionalScore > modernScore) {
-      conflictNote =
-        "Kalender tradisional mendukung tanam, namun kondisi cuaca modern perlu diwaspadai.";
-    } else {
-      conflictNote =
-        "Cuaca modern mendukung, namun kalender tradisional menyarankan kehati-hatian.";
-    }
+    conflictNote = traditionalScore > modernScore
+      ? "Kalender Baduy lebih optimis — waspadai kondisi cuaca."
+      : "Cuaca mendukung — namun hormati panduan kalender tradisional.";
   }
 
   return {
     isSynced,
     syncScore,
+    traditionalScore,
+    modernScore,
     traditionalSays: `${bentang.phase} — ${bentang.traditionalSeason}`,
-    modernSays: `${weather.current.weatherDesc}, Curah Hujan ${weather.rainfallIntensity}`,
+    modernSays: `${weather.current.weatherDesc}, ${weather.rainfallIntensity}`,
     conflictNote,
     recommendation,
+    riskFactors,
+    confidence,
+    weeklyOutlook,
+    alerts,
+    optimalWindow,
   };
 }

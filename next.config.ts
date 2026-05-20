@@ -1,7 +1,14 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "api.bmkg.go.id" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "firebasestorage.googleapis.com" },
+    ],
+  },
+  // Leaflet requires transpilation for SSR compatibility
+  transpilePackages: [],
 };
 
-export default nextConfig;
+module.exports = nextConfig;

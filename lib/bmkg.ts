@@ -1,16 +1,6 @@
 import { BMKGWeatherData, BMKGForecastDay } from "@/types";
 import { BMKGLocation } from "@/data/locations";
 
-/**
- * BMKG WEATHER SERVICE
- *
- * Menggunakan BMKG Open Data API:
- * - Endpoint: https://api.bmkg.go.id/publik/prakiraan-cuaca
- * - Dokumentasi: https://data.bmkg.go.id/prakiraan-cuaca/
- *
- * BMKG mengembalikan prakiraan cuaca per wilayah administratif (adm1-adm4)
- */
-
 const BMKG_BASE_URL = "https://api.bmkg.go.id/publik/prakiraan-cuaca";
 
 // Weather code mappings from BMKG
@@ -32,12 +22,10 @@ const WEATHER_CODE_MAP: Record<string, { desc: string; icon: string }> = {
 };
 
 function getWeatherInfo(code: string): { desc: string; icon: string } {
-  return WEATHER_CODE_MAP[code] || { desc: "Tidak Diketahui", icon: "❓" };
+  return WEATHER_CODE_MAP[code] || { desc: "Cerah Berawan", icon: "🌤️" }; // Default aman
 }
 
-function getRainfallIntensity(
-  rainfall: number
-): BMKGWeatherData["rainfallIntensity"] {
+function getRainfallIntensity(rainfall: number): BMKGWeatherData["rainfallIntensity"] {
   if (rainfall === 0) return "Tidak Hujan";
   if (rainfall < 5) return "Ringan";
   if (rainfall < 20) return "Sedang";
@@ -45,70 +33,87 @@ function getRainfallIntensity(
   return "Sangat Lebat";
 }
 
-function getClimaticCondition(
-  rainfall: number,
-  avgNormal: number = 15
-): BMKGWeatherData["climaticCondition"] {
-  const ratio = rainfall / avgNormal;
+function getClimaticCondition(rainfall: number, avgNormal: number = 15): BMKGWeatherData["climaticCondition"] {
+  const ratio = rainfall / (avgNormal || 1); // hindari division by zero
   if (ratio < 0.7) return "Di Bawah Normal";
   if (ratio > 1.3) return "Di Atas Normal";
   return "Normal";
 }
 
-export async function fetchBMKGWeather(
-  location: BMKGLocation
-): Promise<BMKGWeatherData> {
+// ─── FETCHER DENGAN TIMEOUT ANTI-HANG ─────────────────────────
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 6000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    // BMKG API endpoint with administrative area code
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+}
+
+export async function fetchBMKGWeather(location: BMKGLocation): Promise<BMKGWeatherData> {
+  try {
     const url = `${BMKG_BASE_URL}?adm1=${location.adm1}&adm2=${location.adm2}${
       location.adm3 ? `&adm3=${location.adm3}` : ""
     }`;
 
-    const response = await fetch(url, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
-      headers: {
-        Accept: "application/json",
-      },
-    });
+    const response = await fetchWithTimeout(url, {
+      cache: "no-store", // WAJIB no-store biar lokasi ganti, data langsung update!
+      headers: { Accept: "application/json" },
+    }, 6000); // Batas maksimal nunggu BMKG 6 detik aja
 
-    if (!response.ok) {
-      throw new Error(`BMKG API returned ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`BMKG API error: ${response.status}`);
 
     const raw = await response.json();
     return parseBMKGResponse(raw, location);
   } catch (error) {
-    console.error("BMKG fetch failed, using fallback:", error);
+    console.warn(`⚠️ Gagal narik data BMKG untuk ${location.name}. Pindah ke mode Fallback.`);
     return generateFallbackWeather(location);
   }
 }
 
 function parseBMKGResponse(raw: unknown, location: BMKGLocation): BMKGWeatherData {
-  // BMKG API response structure parsing
-  // Response: { data: [{ lokasi: {...}, cuaca: [[{...}, ...], ...] }] }
   const rawObj = raw as Record<string, unknown>;
   const dataArr = rawObj.data as Array<Record<string, unknown>>;
 
   if (!dataArr || !Array.isArray(dataArr) || dataArr.length === 0) {
-    throw new Error("Invalid BMKG response structure");
+    throw new Error("Struktur JSON BMKG tidak valid/kosong");
   }
 
   const locationData = dataArr[0];
   const cuacaData = locationData.cuaca as Array<Array<Record<string, unknown>>>;
 
   if (!cuacaData || !Array.isArray(cuacaData)) {
-    throw new Error("No forecast data in response");
+    throw new Error("Tidak ada data 'cuaca' di response BMKG");
   }
 
-  // Flatten all forecast periods
   const allForecasts = cuacaData.flat();
-  const current = allForecasts[0];
+  if (allForecasts.length === 0) throw new Error("Array cuaca kosong");
+
+  // ─── LOGIKA MENCARI WAKTU TERDEKAT (CLOSEST TIME) ─────────────
+  const now = new Date().getTime();
+  let current = allForecasts[0];
+  let minDiff = Infinity;
+
+  for (const f of allForecasts) {
+    // Format BMKG local_datetime: "2026-05-20 12:00:00"
+    const fTime = new Date(String(f.local_datetime).replace(" ", "T")).getTime();
+    if (!isNaN(fTime)) {
+      const diff = Math.abs(fTime - now);
+      if (diff < minDiff) {
+        minDiff = diff;
+        current = f;
+      }
+    }
+  }
 
   const weatherCode = String(current.weather_code || current.weather || "0");
   const weatherInfo = getWeatherInfo(weatherCode);
   const rainfall = Number(current.tp || 0);
 
-  // Build daily forecasts (BMKG gives 3-hourly, group by day)
   const dailyForecasts = buildDailyForecasts(allForecasts);
 
   return {
@@ -124,7 +129,7 @@ function parseBMKGResponse(raw: unknown, location: BMKGLocation): BMKGWeatherDat
       rainfall: rainfall,
       windSpeed: Number(current.ws || 0),
       weatherCode,
-      weatherDesc: weatherInfo.desc,
+      weatherDesc: String(current.weather_desc || weatherInfo.desc), // Prioritas deskripsi asli BMKG kalau ada
       weatherIcon: weatherInfo.icon,
       timestamp: String(current.local_datetime || new Date().toISOString()),
     },
@@ -134,9 +139,7 @@ function parseBMKGResponse(raw: unknown, location: BMKGLocation): BMKGWeatherDat
   };
 }
 
-function buildDailyForecasts(
-  forecasts: Array<Record<string, unknown>>
-): BMKGForecastDay[] {
+function buildDailyForecasts(forecasts: Array<Record<string, unknown>>): BMKGForecastDay[] {
   const dayMap = new Map<string, Array<Record<string, unknown>>>();
 
   forecasts.forEach((f) => {
@@ -149,39 +152,39 @@ function buildDailyForecasts(
   });
 
   const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-
   const result: BMKGForecastDay[] = [];
+
   dayMap.forEach((dayForecasts, date) => {
     const temps = dayForecasts.map((f) => Number(f.t || 28));
     const rainfalls = dayForecasts.map((f) => Number(f.tp || 0));
     const humidities = dayForecasts.map((f) => Number(f.hu || 80));
 
     const d = new Date(date);
-    const weatherCode = String(dayForecasts[6]?.weather_code || dayForecasts[0]?.weather_code || "0");
+    // Ambil cuaca dominan siang hari (index ke-2 atau ke-3 biasanya jam 12:00 / 15:00)
+    const midDayForecast = dayForecasts.length > 2 ? dayForecasts[2] : dayForecasts[0];
+    const weatherCode = String(midDayForecast?.weather_code || midDayForecast?.weather || "0");
+    const weatherInfo = getWeatherInfo(weatherCode);
 
     result.push({
       date,
       dayName: dayNames[d.getDay()],
       maxTemp: Math.max(...temps),
       minTemp: Math.min(...temps),
-      rainfall: Math.max(...rainfalls),
+      rainfall: Math.max(...rainfalls), // Pakai curah hujan tertinggi hari itu
       humidity: Math.round(humidities.reduce((a, b) => a + b, 0) / humidities.length),
       weatherCode,
-      weatherDesc: getWeatherInfo(weatherCode).desc,
+      weatherDesc: String(midDayForecast?.weather_desc || weatherInfo.desc),
     });
   });
 
-  return result.slice(0, 7); // Return max 7 days
+  return result.slice(0, 7); 
 }
 
-/**
- * FALLBACK DATA — digunakan jika BMKG API tidak tersedia
- * Data berdasarkan rata-rata klimatologi kawasan Lebak, Banten
- */
+// ─── FALLBACK DATA YANG LEBIH PINTAR ──────────────────────
 export function generateFallbackWeather(location: BMKGLocation): BMKGWeatherData {
   const month = new Date().getMonth() + 1;
 
-  // Monthly climatological averages for Lebak, Banten
+  // Data Klimatologi Banten/Jawa Barat secara general
   const monthlyClimate: Record<number, { rainfall: number; temp: number; humidity: number }> = {
     1: { rainfall: 35, temp: 27, humidity: 88 },
     2: { rainfall: 30, temp: 27, humidity: 86 },
@@ -198,20 +201,29 @@ export function generateFallbackWeather(location: BMKGLocation): BMKGWeatherData
   };
 
   const climate = monthlyClimate[month] || monthlyClimate[1];
-  const weatherCode = climate.rainfall > 20 ? "63" : climate.rainfall > 8 ? "60" : "1";
+  
+  // Kasih variasi suhu kalau lokasinya Jakarta (lebih panas) atau Bogor (lebih dingin/hujan)
+  let baseTemp = climate.temp;
+  let baseRain = climate.rainfall;
+  if (location.id === "jakarta") { baseTemp += 2; baseRain -= 5; }
+  else if (location.id === "bogor") { baseTemp -= 2; baseRain += 10; }
+
+  baseRain = Math.max(0, baseRain);
+  
+  const weatherCode = baseRain > 20 ? "63" : baseRain > 8 ? "60" : "1";
   const weatherInfo = getWeatherInfo(weatherCode);
 
   const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
   const forecast: BMKGForecastDay[] = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
-    const variation = Math.random() * 6 - 3;
+    const variation = Math.random() * 4 - 2;
     return {
       date: d.toISOString().split("T")[0],
       dayName: dayNames[d.getDay()],
-      maxTemp: Math.round(climate.temp + 2 + variation),
-      minTemp: Math.round(climate.temp - 3 + variation),
-      rainfall: Math.max(0, Math.round(climate.rainfall + variation * 2)),
+      maxTemp: Math.round(baseTemp + 2 + Math.abs(variation)),
+      minTemp: Math.round(baseTemp - 3 - Math.abs(variation)),
+      rainfall: Math.max(0, Math.round(baseRain + variation * 2)),
       humidity: Math.min(100, Math.round(climate.humidity + variation)),
       weatherCode,
       weatherDesc: weatherInfo.desc,
@@ -226,17 +238,17 @@ export function generateFallbackWeather(location: BMKGLocation): BMKGWeatherData
       province: location.province,
     },
     current: {
-      temperature: climate.temp,
+      temperature: baseTemp,
       humidity: climate.humidity,
-      rainfall: climate.rainfall,
-      windSpeed: 12,
+      rainfall: baseRain,
+      windSpeed: 10 + Math.round(Math.random() * 5),
       weatherCode,
       weatherDesc: weatherInfo.desc,
       weatherIcon: weatherInfo.icon,
       timestamp: new Date().toISOString(),
     },
     forecast,
-    rainfallIntensity: getRainfallIntensity(climate.rainfall),
+    rainfallIntensity: getRainfallIntensity(baseRain),
     climaticCondition: "Normal",
   };
 }

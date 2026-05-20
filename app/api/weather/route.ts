@@ -4,7 +4,8 @@ import { getLocationById, DEFAULT_LOCATION } from "@/data/locations";
 import { WeatherAPIResponse } from "@/types";
 
 export const runtime = "nodejs";
-export const revalidate = 3600; // Revalidate every hour
+// Hapus export const revalidate = 3600; dan ganti ini:
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -24,7 +25,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response, {
       headers: {
-        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
+        // Matikan cache biar data di Peta Risiko ikut akurat
+        "Cache-Control": "no-store, max-age=0",
       },
     });
   } catch (error) {
@@ -41,6 +43,10 @@ export async function GET(request: NextRequest) {
       fetchedAt: new Date().toISOString(),
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    });
   }
 }

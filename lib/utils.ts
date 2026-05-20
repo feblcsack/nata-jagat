@@ -1,6 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { RecommendationStatus } from "@/types";
+import { Leaf, ThumbsUp, AlertTriangle, Clock, Ban } from "lucide-react";
+import React from "react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -10,48 +12,49 @@ export function getStatusConfig(status: RecommendationStatus) {
   const config = {
     SANGAT_BAIK: {
       label: "Sangat Baik",
-      color: "bg-forest-500 text-white",
-      border: "border-forest-400",
-      bg: "bg-forest-50",
-      text: "text-forest-700",
-      dot: "bg-forest-500",
-      icon: "🌱",
+      color: "bg-[#186534] text-white", // Primary Deep Green
+      border: "border-emerald-200",
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+      dot: "bg-emerald-500",
+      // Di file .ts, kita pake React.createElement pengganti sintaks <Leaf />
+      icon: React.createElement(Leaf, { className: "w-8 h-8 text-white opacity-90" }),
     },
     BAIK: {
       label: "Baik",
-      color: "bg-sage-500 text-white",
-      border: "border-sage-400",
-      bg: "bg-sage-50",
-      text: "text-sage-700",
-      dot: "bg-sage-500",
-      icon: "✅",
+      color: "bg-teal-500 text-white",
+      border: "border-teal-200",
+      bg: "bg-teal-50",
+      text: "text-teal-700",
+      dot: "bg-teal-400",
+      icon: React.createElement(ThumbsUp, { className: "w-8 h-8 text-white opacity-90" }),
     },
     CUKUP: {
       label: "Cukup",
-      color: "bg-earth-400 text-white",
-      border: "border-earth-300",
-      bg: "bg-earth-50",
-      text: "text-earth-700",
-      dot: "bg-earth-400",
-      icon: "⚠️",
+      color: "bg-amber-500 text-white",
+      border: "border-amber-200",
+      bg: "bg-amber-50",
+      text: "text-amber-800",
+      dot: "bg-amber-400",
+      icon: React.createElement(AlertTriangle, { className: "w-8 h-8 text-white opacity-90" }),
     },
     TUNDA: {
       label: "Tunda",
-      color: "bg-yellow-500 text-white",
-      border: "border-yellow-400",
-      bg: "bg-yellow-50",
-      text: "text-yellow-700",
-      dot: "bg-yellow-500",
-      icon: "⏳",
+      color: "bg-orange-500 text-white",
+      border: "border-orange-200",
+      bg: "bg-orange-50",
+      text: "text-orange-700",
+      dot: "bg-orange-400",
+      icon: React.createElement(Clock, { className: "w-8 h-8 text-white opacity-90" }),
     },
     DILARANG: {
       label: "Pantang",
-      color: "bg-red-600 text-white",
-      border: "border-red-400",
-      bg: "bg-red-50",
-      text: "text-red-700",
-      dot: "bg-red-500",
-      icon: "🚫",
+      color: "bg-rose-500 text-white",
+      border: "border-rose-200",
+      bg: "bg-rose-50",
+      text: "text-rose-700",
+      dot: "bg-rose-400",
+      icon: React.createElement(Ban, { className: "w-8 h-8 text-white opacity-90" }),
     },
   };
   return config[status] ?? config.CUKUP;
@@ -66,12 +69,13 @@ export function formatMonth(month: number): string {
 }
 
 export function getRainfallColor(intensity: string): string {
+  // Menggunakan palet pastel yang soft
   const map: Record<string, string> = {
-    "Tidak Hujan": "#f59e0b",
-    "Ringan": "#22c55e",
-    "Sedang": "#3b82f6",
-    "Lebat": "#6366f1",
-    "Sangat Lebat": "#ef4444",
+    "Tidak Hujan": "#fbbf24",  // amber-400
+    "Ringan": "#38bdf8",       // sky-400 
+    "Sedang": "#60a5fa",       // blue-400
+    "Lebat": "#818cf8",        // indigo-400
+    "Sangat Lebat": "#fb7185", // rose-400
   };
-  return map[intensity] ?? "#6b7280";
+  return map[intensity] ?? "#94a3b8"; // slate-400
 }
